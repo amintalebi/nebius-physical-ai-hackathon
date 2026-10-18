@@ -6,8 +6,10 @@ filtered with (starter mdp.cube_placed: cube at rest on the pad, jaw open, gripp
 --success_steps frames), same per-trial cap. Start scripts/act_server.py first (LeRobot venv), then
 run this with the Isaac Lab python, from anywhere:
 
-    $ISAACLAB_PY scripts/eval_act_in_sim.py --starter ~/work/so101_sim_pickplace --per-spot 2 \
-        --ckpt-name act_sim_A_20k --out reports/sim_eval_act_sim_A_20k.jsonl [--record_dir logs/eval]
+    for s in 25 30 40; do  # one process per cube size (the starter picks the cube asset at import)
+      $ISAACLAB_PY scripts/eval_act_in_sim.py --starter ~/work/so101_sim_pickplace --per-spot 1 --size $s \
+          --ckpt-name act_sim_A_20k --out reports/sim_eval_act_sim_A_20k.jsonl [--record_dir logs/eval]
+    done
 
 Observations are built exactly like collect_demos.py writes the dataset (front/wrist 640x480 RGB,
 state = so101_units.rad_to_norm of the joint positions); actions come back in the same units and are
@@ -40,6 +42,9 @@ parser.add_argument("--starter", type=Path, default=known.starter)
 parser.add_argument("--station", type=Path, default=REPO / "configs/station.yaml")
 parser.add_argument("--spots", nargs="*", help="subset of grid spot names, default all 9")
 parser.add_argument("--per-spot", type=int, default=2)
+parser.add_argument("--size", type=int, default=None,
+                    help="cube size in mm for this run (the starter picks the cube asset at import, so one size per process); "
+                         "default: station.yaml cube_size_m")
 parser.add_argument("--jitter", type=float, default=0.012, help="+- m around each spot, as in collection")
 parser.add_argument("--policy_port", type=int, default=5556)
 parser.add_argument("--ckpt-name", required=True, help="label written to every result row")
@@ -55,7 +60,7 @@ os.environ.update(  # read by the patched pickplace_env_cfg at import time (sim_
     S2T_PAD_XY="{},{}".format(*g["pad_center_xy"]),
     S2T_CAM_POS=",".join(map(str, g["front_cam_pos"])),
     S2T_CAM_LOOK_AT=",".join(map(str, g["front_cam_look_at"])),
-    CUBE_SIZE_MM=str(round(g["cube_size_m"] * 1000)),
+    CUBE_SIZE_MM=str(args.size or round(g["cube_size_m"] * 1000)),
     CUBE_COLOR=g["cube_color"],
 )
 from so101_pickplace.pickplace_env_cfg import CUBE_SIZE, IMAGE_HEIGHT, IMAGE_WIDTH, SO101PickPlaceJointEnvCfg  # noqa: E402
@@ -119,7 +124,7 @@ with launch_simulation(env_cfg, args):
             rec = None
             if args.record_dir:
                 os.makedirs(args.record_dir, exist_ok=True)
-                path = os.path.join(args.record_dir, f"{args.ckpt_name}_{spot}_{k}.mp4")
+                path = os.path.join(args.record_dir, f"{args.ckpt_name}_{round(CUBE_SIZE * 1000)}mm_{spot}_{k}.mp4")
                 rec = subprocess.Popen(
                     ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s",
                      f"{IMAGE_WIDTH}x{IMAGE_HEIGHT}", "-r", "30", "-i", "-", "-an", "-c:v", "libx264",
@@ -143,7 +148,7 @@ with launch_simulation(env_cfg, args):
             if rec is not None:
                 rec.stdin.close()
                 rec.wait()
-            row = {"ckpt": args.ckpt_name, "spot": spot, "trial": k, "outcome": outcome, "steps": t,
+            row = {"ckpt": args.ckpt_name, "size_mm": round(CUBE_SIZE * 1000), "spot": spot, "trial": k, "outcome": outcome, "steps": t,
                    "sim_seconds": round(t / 30, 1), "wall_seconds": round(time.perf_counter() - t0, 1)}
             rows.append(row)
             with args.out.open("a") as f:
@@ -151,7 +156,7 @@ with launch_simulation(env_cfg, args):
             print(f"[eval] {spot} #{k}: {outcome} after {t} steps", flush=True)
 
     ok = sum(r["outcome"] == "success" for r in rows)
-    print(f"[eval] {args.ckpt_name}: {ok}/{len(rows)} = {ok / max(len(rows), 1):.2f}")
+    print(f"[eval] {args.ckpt_name} @ {round(CUBE_SIZE * 1000)} mm: {ok}/{len(rows)} = {ok / max(len(rows), 1):.2f}")
     for spot in spots:
         rs = [r for r in rows if r["spot"] == spot]
         print(f"[eval]   {spot}: {sum(r['outcome'] == 'success' for r in rs)}/{len(rs)}  "
