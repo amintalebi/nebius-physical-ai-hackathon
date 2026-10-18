@@ -16,22 +16,22 @@ import cv2
 
 ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 ap.add_argument("--index", type=int, default=1)
-ap.add_argument("--ref", type=Path, required=True)
+ap.add_argument("--ref", type=Path, default=None, help="sim frame to blend in (omit: plain live view with guides)")
 ap.add_argument("--out", type=Path, default=Path(__file__).resolve().parents[2] / "station_cams")
 args = ap.parse_args()
 
-ref = cv2.resize(cv2.imread(str(args.ref)), (640, 480))
+ref = cv2.resize(cv2.imread(str(args.ref)), (640, 480)) if args.ref else None
 cap = cv2.VideoCapture(args.index)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-alpha = 0.5
+alpha = 0.5 if ref is not None else 0.0
 while True:
     ok, frame = cap.read()
     if not ok:
         raise SystemExit(f"camera {args.index} gave no frame (camera permission? wrong index?)")
     h, w = frame.shape[:2]
     frame = cv2.resize(frame, (640, 480))
-    view = cv2.addWeighted(frame, 1 - alpha, ref, alpha, 0)
+    view = cv2.addWeighted(frame, 1 - alpha, ref, alpha, 0) if ref is not None else frame.copy()
     for x in (213, 427):
         cv2.line(view, (x, 0), (x, 479), (0, 255, 255), 1)
     for y in (160, 320):
