@@ -24,6 +24,7 @@ docs/roadmap/       the plan
 
 | Step | Where | Command |
 |---|---|---|
+| Object Storage write check (T+0:30) | anywhere | `python scripts/nebius_s3.py check s3://<bucket>/<team>/` |
 | Sim demos on the 9 spots | Nebius RTX PRO 6000 / L40S | `python scripts/collect_grid.py --starter <starter> --per-spot 12 --dataset-name sim_A` |
 | Sim → real units, 1 camera | VM | `python scripts/convert_sim_dataset.py --src … --dst …` |
 | Cosmos Transfer (edge + style frame) | Nebius H100/H200/RTX PRO 6000 | `python scripts/cosmos_transfer_batch.py prepare / run / assemble` |

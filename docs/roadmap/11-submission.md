@@ -19,6 +19,38 @@ nebius/                      usage.md, instance list, nvidia-smi, training logs,
 ensemble/                    README.md (design) + its eval rows
 ```
 
+## Credentials (T+0:00-0:30, owner T)
+
+Use the organizers' bucket if they give one (open question 3); otherwise create our own. Object Storage takes
+S3 access keys that belong to a **service account**, not to your user. These are the same `nebius` CLI steps
+that nebius/nebius-physical-ai @ `8195442` automates in `research/lerobot-deploy/environment.sh`:
+
+```bash
+export NEBIUS_TENANT_ID=tenant-… NEBIUS_PROJECT_ID=project-… NEBIUS_REGION=eu-north1
+nebius storage bucket create --name <bucket> --parent-id $NEBIUS_PROJECT_ID     # skip if organizers gave one
+SA=$(nebius iam service-account create --parent-id $NEBIUS_PROJECT_ID --name s2t-storage --format json | jq -r .metadata.id)
+EDITORS=$(nebius iam group get-by-name --parent-id $NEBIUS_TENANT_ID --name editors --format json | jq -r .metadata.id)
+nebius iam group-membership create --parent-id $EDITORS --member-id $SA       # needs tenant admin; else ask organizers
+KEY=$(nebius iam v2 access-key create --parent-id $NEBIUS_PROJECT_ID --name s2t-key \
+        --account-service-account-id $SA --format json | jq -r .metadata.id)
+export AWS_ACCESS_KEY_ID=$(nebius iam v2 access-key get --id $KEY --format json | jq -r .status.aws_access_key_id)
+export AWS_SECRET_ACCESS_KEY=$(nebius iam v2 access-key get-secret --id $KEY --format json | jq -r .secret)
+```
+
+The secret is shown once. Put it in `~/.aws/credentials` under `[nebius]` on every box that uploads (VM-gpu,
+VM-sim, laptop), never in git. Then prove write access **now**, not at T+8:30:
+
+```bash
+uv run --with boto3 python scripts/nebius_s3.py check s3://<bucket>/<team>/   # writes, reads back, deletes 1 byte
+```
+
+During the day, `nebius_s3.py put` mirrors a folder and skips files already uploaded (same key and size). Run it
+after each checkpoint save so a preempted VM loses nothing:
+`python scripts/nebius_s3.py put outputs/act_main s3://<bucket>/<team>/outputs/act_main`.
+The endpoint is `https://storage.<region>.nebius.cloud` for both this script and the aws CLI.
+
+## Upload
+
 Build it locally under `submission/` (git-ignored), then:
 
 ```bash
@@ -51,4 +83,4 @@ Sim-to-real alignment:     joint-unit conversion verified by open-loop replay (a
 
 ## If it fails
 
-Credentials or endpoint wrong → test at T+0:30 by uploading a 1-byte file, not at T+8:30.
+Credentials or endpoint wrong → `nebius_s3.py check` at T+0:30 (Credentials above), not at T+8:30.

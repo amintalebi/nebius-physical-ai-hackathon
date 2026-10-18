@@ -27,8 +27,31 @@ vllm serve nvidia/Cosmos3-Nano --tensor-parallel-size 1 --mm-encoder-tp-mode dat
   --allowed-local-media-path / --media-io-kwargs '{"video": {"num_frames": -1}}' --port 8000
 ```
 
-Alternative if no GPU is free: Nebius Token Factory, if it serves a Cosmos reasoner (TODO(verify) model list),
-with `--base-url <token factory url> --api-key $KEY --inline`.
+This is the vLLM *reasoner* serve from the NVIDIA/Cosmos cookbook. nebius/nebius-physical-ai also serves
+`nvidia/Cosmos3-Nano` on vLLM, but with `--omni` as a **video generator** (`/v1/videos/sync`). That is a
+different mode and a different endpoint, so don't copy that command here.
+
+### Fallbacks: self-hosting is the only path that earns the points
+
+Nebius Token Factory no longer serves a Cosmos reasoner. `nvidia/Cosmos3-Super-Reasoner` was retired on
+2026-08-31 and returns HTTP 409 (nebius/nebius-physical-ai @ `8195442`,
+`docs/workbench/token-factory-deprecation-verification.md`). Its replacement there, `MiniMaxAI/MiniMax-M3`, is
+not a Cosmos model, so curation done with it does **not** count for the Cosmos Reason rubric line. In order:
+
+1. **Own GPU (default):** Cosmos3-Nano reasoner on vLLM, command above, ~16-17 GB.
+2. **No spare GPU:** run it on a training GPU. ACT-resnet18 at batch 32 leaves room on an 80 GB H100. Start
+   vLLM with `--gpu-memory-utilization 0.3` so it doesn't take the whole card, then start training.
+3. **Nano won't serve:** `nvidia/Cosmos-Reason2-8B` through the same `vllm serve` pattern. The nebius repo has a
+   container for it, validated on H100, but no serve recipe (TODO(verify) the exact flags on the smoke test).
+   `cosmos_reason_score.py` takes `--model`, and the prompt and JSON parsing don't change.
+4. **Last resort, never for curation:** Token Factory `MiniMaxAI/MiniMax-M3`
+   (`--base-url https://api.tokenfactory.nebius.com/v1/ --api-key $NEBIUS_TOKEN_FACTORY_KEY --model MiniMaxAI/MiniMax-M3 --inline`).
+   It is acceptable only as the ensemble verifier (10), described as "VLM verifier", not as Cosmos. Its JSON
+   mode returns malformed output. Our scripts already ask for JSON in the prompt and parse it strictly, so
+   don't add `response_format`.
+
+Ask the organizers first (open question 11). If they host a Cosmos reasoner endpoint for the event, use it
+with `--base-url … --api-key … --inline` and skip steps 1-3.
 
 ## Commands
 
