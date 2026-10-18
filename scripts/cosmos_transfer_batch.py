@@ -81,7 +81,7 @@ def cmd_prepare(a):
 
     st = yaml.safe_load((REPO / "configs/station.yaml").read_text())
     cam = st["camera"]["key"]
-    prompts = [p.strip() for p in (REPO / "configs/cosmos/station_prompts.txt").read_text().split("\n---\n") if p.strip()]
+    prompts = [p.strip() for p in Path(a.prompts).read_text().split("\n---\n") if p.strip()]
     if a.variants > len(prompts):
         sys.exit(f"--variants {a.variants} but only {len(prompts)} prompts in configs/cosmos/station_prompts.txt")
     style = None
@@ -93,7 +93,8 @@ def cmd_prepare(a):
         print("[warn] no --style-image: prompt-only transfer (Cosmos uses a frame of the sim input as image context)")
     vids = episode_videos(a.dataset, cam)
     lens = episode_lengths(a.dataset)
-    eps = sorted(vids)[: a.limit] if a.limit else sorted(vids)
+    eps = sorted(vids)[:: a.stride]  # stride: an even subset over the spot-by-spot recording order
+    eps = eps[: a.limit] if a.limit else eps
     work = a.work.resolve()
     specs = []
     for ep in eps:
@@ -240,6 +241,8 @@ p.add_argument("--resolution", default=None, help='Cosmos generation resolution,
 p.add_argument("--gpus", type=int, default=1)
 p.add_argument("--variants", type=int, default=1, help="appearance variants per episode (each counts toward 300)")
 p.add_argument("--limit", type=int, default=0, help="only the first N episodes (smoke test)")
+p.add_argument("--stride", type=int, default=1, help="every k-th episode: an even spread over spots when Cosmos time is short")
+p.add_argument("--prompts", default=str(REPO / "configs/cosmos/station_prompts.txt"), help="prompt file, variants split by ---")
 p.add_argument("--model", default="edge/distilled", help="edge/distilled (4 steps, ~8x faster) or the base edge model")
 p.add_argument("--num-steps", type=int, default=4, help="4 for edge/distilled, 35 for base")
 p.add_argument("--guidance", type=float, default=3)
