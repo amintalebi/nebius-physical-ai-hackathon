@@ -35,8 +35,8 @@ geometry:
   pad_center_xy: [0.21, -0.09]          # MEASURE (sim default shown)
   pad_size_m: 0.09                      # MEASURE
   cube_size_m: 0.030                    # single default size (used where a scalar is needed)
-  cube_sizes_mm: [20, 30, 40]           # event cubes are blue in these 3 sizes; collect all (experts grasp scales with CUBE_SIZE)
-  cube_color: blue                      # confirmed: the event cubes are blue (20|30|40 mm)
+  cube_sizes_mm: [25, 30, 40]           # event cubes are blue in these 3 sizes; collect all (experts grasp scales with CUBE_SIZE)
+  cube_color: blue                      # confirmed: the event cubes are blue (25|30|40 mm)
   # 9 taped grid spots, row-major as seen from the camera. Judges use these in a hidden fixed order.
   grid_spots_xy:                        # MEASURE all nine
     A1: [0.16, 0.02]

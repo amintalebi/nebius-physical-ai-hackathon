@@ -15,15 +15,11 @@ and the raw material for Cosmos Transfer (04).
   half the table (the starter default) spend most demos on places the judges never use. We spawn at
   each spot ± 12 mm (tape placement is approximate) with yaw ± 0.8 rad, the pad fixed where it is taped.
 - **Equal episodes per spot.** One spot without data is one judged trial lost.
-- **Cube size varies: blue in 20/30/40 mm.** The event cubes are blue and may be any of three sizes
+- **Cube size varies: blue in 25/30/40 mm.** The event cubes are blue and may be any of three sizes
   across judged trials, so the sim must cover **all three** for every spot. `collect_grid.py` loops
-  over `geometry.cube_sizes_mm` (`[20, 30, 40]`, `cube_color: blue` in `configs/station.yaml`) and
+  over `geometry.cube_sizes_mm` (`[25, 30, 40]`, `cube_color: blue` in `configs/station.yaml`) and
   writes every (spot × size) into one dataset. Do not oversample one size — the policy must grasp
   all three.
-  - **⚠ Asset gap:** the starter ships cube assets for **25/30/40 mm only** (verified in
-    `assets/cube_blocks/` — no 20 mm USD/STL). To cover 20 mm you must either add a 20 mm cube twin
-    (spawn a `CuboidCfg` cube or a generated 20 mm USD in the env cfg) **or confirm with the
-    organizers that 20 mm is actually in the set** — do this before collecting on that size.
 - **Two disjoint sets.** **A** stays raw in both mixes; **B** is the set Cosmos re-renders. Raw B is
   kept for the controlled ablation (07).
 
@@ -40,11 +36,11 @@ and the raw material for Cosmos Transfer (04).
 
 The starter's scripted grasp is tuned for **30 mm**; `GRASP_POINT_OFFSET` scales its horizontal centre
 with `CUBE_SIZE/2`, but the empirical constants (−0.008, +0.0125, 0.005, −0.062) were calibrated on the
-30 mm cube. Validate 20/40 before spending the episode budget:
+30 mm cube. Validate 25/40 before spending the episode budget:
 
-- **Smoke per size:** `collect_grid.py --sizes 20 --spots B2 --per-spot 5` (then `30`, `40`) and watch
+- **Smoke per size:** `collect_grid.py --sizes 25 --spots B2 --per-spot 5` (then `30`, `40`) and watch
   the `collect.log` success lines. **Pass:** ≥ 3/5 episodes per size lift and place the cube
-  (`mdp.cube_placed`), not just "touched". If the 30 mm pass rate is high but 20 or 40 is clearly worse,
+  (`mdp.cube_placed`), not just "touched". If the 30 mm pass rate is high but 25 or 40 is clearly worse,
   re-run the starter's `scripts/calibrate_grasp.py` for that size and update the env cfg before bulk.
 - **Watch at 2× speed:** for each size, confirm the grasp visually closes on the cube (not in front of
   or through it). A consistent miss on one size = a grasp-offset or waypoint issue for that size.
@@ -79,7 +75,7 @@ Keep the v2.1 converted copy of B: Cosmos (04) works on per-episode mp4s, which 
 **Smoke result (2026-10-18, `s2t-rtx6000`):** 3/3 expert successes at B2, ~20 s per attempt (faster than the
 ~25 s the starter README quotes), 915 frames, v2.1 with `front` + `wrist` 640x480 @ 30 fps. Uploaded to
 `s3://s2t-group02-a66c17/data/sim/sim_smoke_v21`.
-- Episode count per size (20/30/40) within each spot: roughly balanced; no size undersampled and no
+- Episode count per size (25/30/40) within each spot: roughly balanced; no size undersampled and no
   whole size missing from a spot.
 - 5 random episodes watched at 2× speed: cube visibly in a grid-spot position, pad in place, and the
   grasp closes correctly for that episode's cube size.
