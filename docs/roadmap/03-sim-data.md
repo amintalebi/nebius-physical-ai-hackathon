@@ -45,6 +45,13 @@ Keep the v2.1 converted copy of B: Cosmos (04) works on per-episode mp4s, which 
 - `collect.log` shows per-spot success lines for all 9 spots (the expert's own success check:
   cube on pad, at rest, jaw open, gripper clear; `mdp.cube_placed`).
 - Episode count per spot in the dataset: equal within ±1 (count from the log's `cube_b=(x,y)` field).
+  `cube_b` is in the robot's URDF base frame, which the starter seats rotated 90° from the scene frame that
+  `configs/station.yaml` uses: `cube_b = (y, -x)` of the station coordinates. Smoke run at B2 (0.215, 0.075) logged
+  `cube_b ≈ (0.075, -0.215) ± 12 mm`, as expected.
+
+**Smoke result (2026-10-18, `s2t-rtx6000`):** 3/3 expert successes at B2, ~20 s per attempt (faster than the
+~25 s the starter README quotes), 915 frames, v2.1 with `front` + `wrist` 640x480 @ 30 fps. Uploaded to
+`s3://s2t-group02-a66c17/data/sim/sim_smoke_v21`.
 - 5 random episodes watched at 2× speed: cube visibly in a grid-spot position, pad in its taped place.
 - Cosmos Reason later scores these too (05). Sim episodes failing its rule are a signal of an expert bug.
 

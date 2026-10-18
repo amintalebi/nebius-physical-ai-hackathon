@@ -58,7 +58,9 @@ python scripts/cosmos_metrics.py --sim data/sim/B_real_units --cosmos data/cosmo
 ```
 
 Install on the VM per cosmos-transfer2.5 `docs/setup.md` (separate venv). Check `python examples/inference.py --help`
-for the guardrail flag spelling before the bulk run; pass extra flags after `run … --`.
+for the guardrail flag spelling before the bulk run; pass extra flags after `run … --`. Guardrails must be
+**disabled** (`disable_guardrails` in `cosmos_transfer2/config.py`): the guardrail stack pulls Meta's gated
+`Llama-Guard-3-8B`, which our token can't access. Our inputs are our own sim renders.
 
 ## Acceptance check (numbers, not impressions)
 

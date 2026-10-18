@@ -1,0 +1,15 @@
+--- a/so101_pickplace/pickplace_env_cfg.py
++++ b/so101_pickplace/pickplace_env_cfg.py
+@@ -278,10 +278,10 @@
+         cube_pose_b = ObsTerm(func=mdp.object_pose_in_base, params={"object_cfg": SceneEntityCfg("cube")})
+         target_pose_b = ObsTerm(func=mdp.object_pose_in_base, params={"object_cfg": SceneEntityCfg("target")})
+         front = ObsTerm(
+-            func=base_mdp.image, params={"sensor_cfg": SceneEntityCfg("front_cam"), "data_type": "rgb", "normalize": False}
++            func=base_mdp.image_rgb, params={"sensor_cfg": SceneEntityCfg("front_cam"), "data_type": "rgb", "normalize": False}
+         )
+         wrist = ObsTerm(
+-            func=base_mdp.image, params={"sensor_cfg": SceneEntityCfg("wrist_cam"), "data_type": "rgb", "normalize": False}
++            func=base_mdp.image_rgb, params={"sensor_cfg": SceneEntityCfg("wrist_cam"), "data_type": "rgb", "normalize": False}
+         )
+ 
+         def __post_init__(self):

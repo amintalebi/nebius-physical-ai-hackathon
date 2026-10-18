@@ -11,8 +11,8 @@ spot, or an action in the wrong units. Those three are fixed here, by measuremen
 
 - The organizers' calibration file for our follower → `configs/calibration/<robot.id>.json`
 - Tape measure, a phone camera, one frame from the station camera
-- The starter checkout on `s2t-rtx6000` with `sim_patches/s2t_station.patch` applied:
-  `cd <starter> && git apply <this repo>/sim_patches/s2t_station.patch`
+- The starter checkout on `s2t-rtx6000` with both patches applied (already done there):
+  `cd <starter> && git apply <this repo>/sim_patches/s2t_station.patch <this repo>/sim_patches/isaaclab_release30_compat.patch`
 
 ## 2.1 Measure the table into `configs/station.yaml`
 

@@ -37,6 +37,9 @@ names = args.spots or list(spots)
 patched = (args.starter / "so101_pickplace/pickplace_env_cfg.py").read_text()
 if "S2T_CUBE_XY" not in patched:
     sys.exit("starter is not patched: git apply sim_patches/s2t_station.patch inside the starter checkout")
+if "base_mdp.image," in patched:
+    sys.exit("starter uses mdp.image, removed in Isaac Lab release/3.0.0: "
+             "git apply sim_patches/isaaclab_release30_compat.patch inside the starter checkout")
 
 first = True
 for name in names:

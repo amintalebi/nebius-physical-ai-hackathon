@@ -23,7 +23,7 @@ Team limits: 3 VMs, 20 non-GPU vCPUs, 4 disks / 500 GiB (100 GiB left), **1 publ
 
 | Path | What | Use for |
 |---|---|---|
-| `~/work/so101_sim_pickplace` | starter @ `52b23a9` + `sim_patches/s2t_station.patch`, `env.sh` pointed at `~/work` | `collect_grid.py --starter ~/work/so101_sim_pickplace` |
+| `~/work/so101_sim_pickplace` | starter @ `52b23a9` + `sim_patches/s2t_station.patch` + `isaaclab_release30_compat.patch`, `env.sh` pointed at `~/work` | `collect_grid.py --starter ~/work/so101_sim_pickplace` |
 | `~/work/env_isaaclab` | Isaac Sim 6.1.0 + Isaac Lab `release/3.0.0` (`0c114a24a`), torch 2.11+cu130 | `$ISAACLAB_PY` (sim) |
 | `~/work/env_lerobot` | LeRobot 0.6.2 @ `146d847` `[training,dataset,feetech]`, torch 2.11+cu128 | conversion, merge, ACT training |
 | `~/work/cosmos-transfer2.5/.venv` | Cosmos Transfer 2.5 @ `2ff49d0`, `uv sync --extra=cu130`, torch 2.9.1 | `cosmos_transfer_batch.py run --cosmos-repo ~/work/cosmos-transfer2.5` |
@@ -31,8 +31,9 @@ Team limits: 3 VMs, 20 non-GPU vCPUs, 4 disks / 500 GiB (100 GiB left), **1 publ
 | `~/work/s2t` | this repo | |
 
 Not installed: GR00T (we train ACT; its install needs an interactive Hugging Face login) and vLLM (only needed if
-the Token Factory endpoint is not used, 05). Cosmos weights download on first inference and need `hf auth login`
-on the VM with the NVIDIA Open Model License accepted on the Hub. The station laptop needs the same LeRobot commit.
+the Token Factory endpoint is not used, 05). Cosmos weights download on first inference; the VM's Hugging Face token
+(`~/.cache/huggingface/token`) has access to Cosmos-Transfer2.5-2B, Cosmos-Guardrail1 and Cosmos-Reason1-7B, not to
+Meta's Llama-Guard-3-8B, so run Transfer with guardrails disabled (04). The station laptop needs the same LeRobot commit.
 
 ### Sharing the GPU (96 GB)
 
