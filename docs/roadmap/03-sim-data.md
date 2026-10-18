@@ -19,17 +19,19 @@ and the raw material for Cosmos Transfer (04).
   cubes). The starter ships blue USD twins for exactly these sizes (`assets/cube_blocks/usd/cube_{25,30,40}mm_blue.usda`,
   same 1 mm chamfered PLA blocks). `collect_grid.py` loops over `geometry.cube_sizes_mm` and splits the per-spot
   budget evenly over the sizes.
-  - **Small cubes need `sim_patches/small_cube_grasp.patch`.** The expert closes with its grasp point 8 mm above
-    the block centre and the jaw tips ~22 mm below that, i.e. 14 mm below the centre: fine for 30 mm (tips 1 mm
-    above the table), inside the table for 25 mm (-1.5 mm) and 20 mm (-4 mm, measured 0/10 successes). The patch
-    keeps the tips ≥ 1 mm above the table and shifts the place height by the same amount; 30/40 mm unchanged.
+  - **Sim covers 30 and 40 mm only (team decision 2026-10-18); 25 mm comes from real teleop demos.** The
+    starter's scripted expert cannot grasp the 25 mm cube: 0/2 unpatched, 0/1 with
+    `sim_patches/small_cube_grasp.patch` (jaw tips kept above the table), and a 5x5 sweep of grasp offsets
+    (±10 mm, `calibrate_grasp.py`) lifted it 0/25 times, with the gripper closing fully on nothing every time.
+    30 and 40 mm: 4/4 each at B2 and 100 % in bulk so far. The patch stays in the repo but changes nothing at
+    30/40 mm. When we get the arm, spend part of the ≤ 50 real demos on the 25 mm cube.
 - **Two disjoint sets.** **A** stays raw in both mixes; **B** is the set Cosmos re-renders. Raw B is
   kept for the controlled ablation (07).
 
 | Set | `--per-spot` (total, split over sizes) | Per size per spot | Total | Use |
 |---|---|---|---|---|
-| A | 12 | 4 | 108 | raw sim in `main` and `ablation` |
-| B | 18 | 6 | 162 | Cosmos-transferred in `main`, raw in `ablation` (curation trims to fit 300) |
+| A | 8 (2 sizes) | 4 | 72 | raw sim in `main` and `ablation` |
+| B | 12 (2 sizes) | 6 | 108 | Cosmos-transferred in `main`, raw in `ablation` (curation trims to fit 300) |
 
 `--per-spot` is the **total per spot**; `collect_grid.py` splits it over the sizes (`s2t/sampling.py`) and prints
 the per-size totals before starting. Each (set, size, spot) gets its own `--seed`: the starter defaults to
@@ -40,7 +42,7 @@ costs ~1 min of startup, i.e. 36 launches per set. **Fast path: one process per 
 its own dataset, merged after the v3 conversion (`lerobot-edit-dataset … merge`):
 
 ```bash
-for s in 25 30 40; do
+for s in 30 40; do
   python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 4 --sizes $s --dataset-name sim_A_$s &
 done
 ```
@@ -88,7 +90,7 @@ Keep the v2.1 converted copy of B: Cosmos (04) works on per-episode mp4s, which 
 **Smoke result (2026-10-18, `s2t-rtx6000`):** 3/3 expert successes at B2, ~20 s per attempt (faster than the
 ~25 s the starter README quotes), 915 frames, v2.1 with `front` + `wrist` 640x480 @ 30 fps. Uploaded to
 `s3://s2t-group02-a66c17/data/sim/sim_smoke_v21`.
-- Episode count per size (25/30/40) within each spot: roughly balanced; no size undersampled and no
+- Episode count per size (30/40) within each spot: roughly balanced; no size undersampled and no
   whole size missing from a spot.
 - 5 random episodes watched at 2× speed: cube visibly in a grid-spot position, pad in place, and the
   grasp closes correctly for that episode's cube size.
