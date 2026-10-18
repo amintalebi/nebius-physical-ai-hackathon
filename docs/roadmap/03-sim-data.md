@@ -15,16 +15,11 @@ and the raw material for Cosmos Transfer (04).
   half the table (the starter default) spend most demos on places the judges never use. We spawn at
   each spot ± 12 mm (tape placement is approximate) with yaw ± 0.8 rad, the pad fixed where it is taped.
 - **Equal episodes per spot.** One spot without data is one judged trial lost.
-- **Cube size varies: blue, 25/30/40 mm** (confirmed with the organizers 2026-10-18, photo of the three
-  cubes). The starter ships blue USD twins for exactly these sizes (`assets/cube_blocks/usd/cube_{25,30,40}mm_blue.usda`,
+- **Cube size varies: blue, 30/40 mm** (confirmed with the organizers 2026-10-18, photo of the cubes).
+  The starter ships blue USD twins for exactly these sizes (`assets/cube_blocks/usd/cube_{30,40}mm_blue.usda`,
   same 1 mm chamfered PLA blocks). `collect_grid.py` loops over `geometry.cube_sizes_mm` and splits the per-spot
-  budget evenly over the sizes.
-  - **Sim covers 30 and 40 mm only (team decision 2026-10-18); 25 mm comes from real teleop demos.** The
-    starter's scripted expert cannot grasp the 25 mm cube: 0/2 unpatched, 0/1 with
-    `sim_patches/small_cube_grasp.patch` (jaw tips kept above the table), and a 5x5 sweep of grasp offsets
-    (±10 mm, `calibrate_grasp.py`) lifted it 0/25 times, with the gripper closing fully on nothing every time.
-    30 and 40 mm: 4/4 each at B2 and 100 % in bulk so far. The patch stays in the repo but changes nothing at
-    30/40 mm. When we get the arm, spend part of the ≤ 50 real demos on the 25 mm cube.
+  budget evenly over the sizes. 20/25 mm support is dropped (the starter only ships 25/30/40, and 25 could not
+  be grasped by the expert): we simulate, real-teleop, and train only 30 and 40 mm.
 - **Two disjoint sets.** **A** stays raw in both mixes; **B** is the set Cosmos re-renders. Raw B is
   kept for the controlled ablation (07).
 
@@ -51,11 +46,11 @@ done
 
 The starter's scripted grasp is tuned for **30 mm**; `GRASP_POINT_OFFSET` scales its horizontal centre
 with `CUBE_SIZE/2`, but the empirical constants (−0.008, +0.0125, 0.005, −0.062) were calibrated on the
-30 mm cube. Validate 25/40 before spending the episode budget:
+30 mm cube. Validate 40 (and 30 as the tuned baseline) before spending the episode budget:
 
-- **Smoke per size:** `collect_grid.py --sizes 20 --spots B2 --per-spot 5` (then `25`, `30`, `40`) and watch
-  the `collect.log` success lines. **Pass:** ≥ 3/5 episodes per size lift and place the cube
-  (`mdp.cube_placed`), not just "touched". If the 30 mm pass rate is high but 20, 25 or 40 is clearly worse,
+- **Smoke per size:** `collect_grid.py --sizes 30 --spots B2 --per-spot 5` (then `40`) and watch
+  the `collect.log` success lines. **Pass:** at least 3/5 episodes per size lift and place the cube
+  (`mdp.cube_placed`), not just touched. If the 30 mm pass rate is high but 40 is clearly worse,
   re-run the starter's `scripts/calibrate_grasp.py` for that size and update the env cfg before bulk.
 - **Watch at 2× speed:** for each size, confirm the grasp visually closes on the cube (not in front of
   or through it). A consistent miss on one size = a grasp-offset or waypoint issue for that size.
@@ -65,7 +60,7 @@ with `CUBE_SIZE/2`, but the empirical constants (−0.008, +0.0125, 0.005, −0.
 ## Commands
 
 ```bash
-# smoke (one spot, all 4 sizes) -> boot check + per-size grasp validation above
+# smoke (one spot, all 2 sizes) -> boot check + per-size grasp validation above
 python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 3 --spots B2 --dataset-name sim_smoke
 # bulk, after gate: collects every spot x every size (from station.yaml cube_sizes_mm)
 python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 18 --dataset-name sim_B

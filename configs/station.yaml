@@ -35,8 +35,8 @@ geometry:
   pad_center_xy: [0.21, -0.09]          # MEASURE (sim default shown)
   pad_size_m: 0.09                      # MEASURE
   cube_size_m: 0.030                    # single default size (used where a scalar is needed)
-  cube_sizes_mm: [30, 40]               # sizes we SIMULATE. Event cubes are blue 25/30/40 mm (confirmed 2026-10-18);
-                                        # 25 mm is left to real teleop: the starter's scripted expert can't grasp it (03)
+  cube_sizes_mm: [30, 40]               # the only sizes we SIMULATE, real-teleop, and train (confirmed 2026-10-18:
+                                        # blue 30/40 mm event cubes; 20/25 mm support dropped)
   cube_color: blue                      # confirmed: the event cubes are blue
   # 9 taped grid spots, row-major as seen from the camera. Judges use these in a hidden fixed order.
   grid_spots_xy:                        # MEASURE all nine

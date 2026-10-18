@@ -3,14 +3,14 @@
 
 Runs the starter's ./collect.sh once per spot (and per cube size) with the s2t_station.patch env vars
 set, appending to one dataset (--resume). Equal episodes per (spot, size) = the training data covers the
-judges' test set and the 25|30|40 mm event cube sizes.
+judges' test set and the 30|40 mm event cube sizes.
 
     python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 12 \
         --dataset-name sim_A
     python scripts/collect_grid.py --starter ... --per-spot 4 --sizes 40 --dataset-name sim_A_40   # one size
 
 Cube sizes default to `geometry.cube_sizes_mm` in configs/station.yaml (fallback: a single
-`cube_size_m`). Cubes below 30 mm need sim_patches/small_cube_grasp.patch in the starter (roadmap 03).
+`cube_size_m`). Both sizes (30/40) ship as USD twins in the starter, so no grasp patch is needed.
 """
 
 from __future__ import annotations
