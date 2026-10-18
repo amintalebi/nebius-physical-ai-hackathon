@@ -1,7 +1,7 @@
 # 01 · Critical path
 
 **Points:** all of them. This file is the schedule; the stage files are the how.
-**Assumption:** ~9 working hours before the cutoff (confirm exact cutoff: [open-questions](open-questions.md)).
+**Cutoff: 18:00** (open question 3). Plan backwards from it: final upload verified by 17:45.
 Times are T+hours from start. Three people: **R** (robot/station), **S** (sim + Cosmos), **T** (training + Nebius + submission).
 
 ## Machines (event setup: one GPU for everything)
@@ -18,6 +18,21 @@ The event gives each team **one** GPU in project `group02-project`, region **`uk
 `nebius --profile hackathon compute instance get-by-name --parent-id <project> --name s2t-rtx6000`.
 Team limits: 3 VMs, 20 non-GPU vCPUs, 4 disks / 500 GiB (100 GiB left), **1 public IP (used by this VM)**,
 1 bucket of 200 GiB. A teammate who needs a second box gets a CPU VM or a CPU DevLab, never a second GPU.
+
+### Environments on the VM (installed 2026-10-18)
+
+| Path | What | Use for |
+|---|---|---|
+| `~/work/so101_sim_pickplace` | starter @ `52b23a9` + `sim_patches/s2t_station.patch`, `env.sh` pointed at `~/work` | `collect_grid.py --starter ~/work/so101_sim_pickplace` |
+| `~/work/env_isaaclab` | Isaac Sim 6.1.0 + Isaac Lab `release/3.0.0` (`0c114a24a`), torch 2.11+cu130 | `$ISAACLAB_PY` (sim) |
+| `~/work/env_lerobot` | LeRobot 0.6.2 @ `146d847` `[training,dataset,feetech]`, torch 2.11+cu128 | conversion, merge, ACT training |
+| `~/work/cosmos-transfer2.5/.venv` | Cosmos Transfer 2.5 @ `2ff49d0`, `uv sync --extra=cu130`, torch 2.9.1 | `cosmos_transfer_batch.py run --cosmos-repo ~/work/cosmos-transfer2.5` |
+| `~/work/venv_tools` | boto3, pyyaml, numpy, pyarrow, uv | `nebius_s3.py`, our helper scripts |
+| `~/work/s2t` | this repo | |
+
+Not installed: GR00T (we train ACT; its install needs an interactive Hugging Face login) and vLLM (only needed if
+the Token Factory endpoint is not used, 05). Cosmos weights download on first inference and need `hf auth login`
+on the VM with the NVIDIA Open Model License accepted on the Hub. The station laptop needs the same LeRobot commit.
 
 ### Sharing the GPU (96 GB)
 

@@ -7,7 +7,7 @@ Each one changes a decision in the plan; the "default" column is what we do with
 |---|---|---|---|
 | 1 | Does each Cosmos variant of the same sim episode count as a separate episode toward the 300 cap? | Decides `--variants` (04) | Yes, it counts; 1 variant |
 | 2 | Does the 50-episode real cap count episodes we recorded and deleted, or only episodes in the final dataset? | Re-recording bad takes (06) | Only the final dataset; keep the raw count ≤ 50 anyway to be safe |
-| 3 | What is the exact submission cutoff time, bucket, region, and folder name? Are datasets expected in the bucket, or only checkpoints + manifest? | 11 | Upload everything in 11's layout |
+| 3 | What is the exact submission cutoff time, bucket, region, and folder name? Are datasets expected in the bucket, or only checkpoints + manifest? **Partly answered: cutoff 18:00.** Folder name still to ask. | 11 | Upload everything in 11's layout |
 | 4 | Who launches the policy in judged trials, with what command, on which machine? Can we use our laptop and `rollout.sh`? | Deployment path, device (CPU/MPS) | We launch `rollout.sh` with the main checkpoint |
 | 5 | Is a retry wrapper (Cosmos Reason verifier + second attempt within the 2-min cap) allowed in judged trials? | 10 | Not used in judged trials |
 | 6 | Start pose for judged trials: arm folded at rest, or any pose we choose? | 02 §2.4, 06 | Rest pose; teleop demos start there too |
@@ -15,5 +15,5 @@ Each one changes a decision in the plan; the "default" column is what we do with
 | 8 | Are we allowed to add a wrist camera, or is the single mounted camera fixed? | Camera features (02) | Single mounted camera |
 | 9 | Is the cube colour/size the one in the kit (30 mm, colour?) and the pad 90 mm? | `configs/station.yaml` | Measure |
 | 10 | Is GROOT allowed as an ensemble member alongside ACT for the main checkpoint ("ACT or GROOT")? | 10 | ACT only for main |
-| 11 | ~~Which Nebius GPU quota do we have?~~ **Answered (participant guide): 1× RTX PRO 6000, `gpu-rtx6000-a`, uk-south2.** Still open: do the organizers host a Cosmos reasoner endpoint? (Token Factory retired its Cosmos3 reasoner on 2026-08-31, see 05) | 01 machine plan, 04 budget, 05 | Reasoner self-hosted on vLLM on our GPU |
-| 12 | Calibration: may we use the organizers' calibration file as-is (and copy it), and will it stay unchanged until judging? | Unit conversion depends on it | Yes; never recalibrate |
+| 11 | ~~Which Nebius GPU quota do we have?~~ **Answered (participant guide): 1× RTX PRO 6000, `gpu-rtx6000-a`, uk-south2.** Reasoner: no organizer endpoint, but we have Token Factory credits and Cosmos3-Super-Reasoner is available as a dedicated endpoint (Finland / US), see 05. | 01 machine plan, 04 budget, 05 | Dedicated Token Factory endpoint (Finland); Nano on vLLM as fallback |
+| 12 | Calibration: may we use the organizers' calibration file as-is (and copy it), and will it stay unchanged until judging? **Answered: confirmed.** | Unit conversion depends on it | Yes; never recalibrate |
