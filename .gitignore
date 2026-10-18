@@ -12,3 +12,4 @@ __pycache__/
 .venv/
 .pytest_cache/
 .DS_Store
+models/

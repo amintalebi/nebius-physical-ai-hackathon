@@ -3,23 +3,30 @@
 
 robot:
   type: so101_follower
-  port: /dev/tty.usbmodemXXXX          # MEASURE: lerobot-find-port
-  id: station_follower                  # MEASURE: id used when the organizers calibrated it
-  # Copy the organizers' calibration file here; scripts read it, never the live cache.
+  port: /dev/tty.usbmodem5C821108671   # station laptop, 2026-10-18 (the folded arm)
+  id: station_follower
+  # Read back from the motors with scripts/read_calibration.py (the organizers' calibration; never recalibrate)
   calibration_file: configs/calibration/station_follower.json
-  use_degrees: true                     # LeRobot default; must match how real episodes are recorded
+  use_degrees: false                    # the starter's sim units are LeRobot's use_degrees=False convention
 
 teleop:
   type: so101_leader
-  port: /dev/tty.usbmodemYYYY           # MEASURE
+  port: /dev/tty.usbmodem5C4C1253321   # station laptop, 2026-10-18
   id: station_leader
+  use_degrees: false                    # must match the follower
 
 camera:
   key: front                            # MUST equal the sim camera key kept in the dataset
-  index_or_path: 0                      # MEASURE: lerobot-find-cameras opencv
+  index_or_path: 1                      # lerobot-find-cameras opencv, 2026-10-18 (front)
   width: 640
   height: 480
   fps: 30
+
+# Real cameras recorded at the station (organizers: front + side, no wrist camera). The policy we train on sim
+# data uses `camera.key` (front) only; side is recorded for real-only training. Indices: lerobot-find-cameras.
+cameras:
+  front: {index_or_path: 1, width: 640, height: 480, fps: 30}   # faces the robot head-on (native 1280x720)
+  side:  {index_or_path: 0, width: 640, height: 480, fps: 30}   # from the robot's side (native 1280x960)
 
 task: "pick up the cube and place it on the green pad"   # same string in sim, real and rollout
 

@@ -7,8 +7,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 eval "$(python3 scripts/station_env.py)"
-NUM="${NUM:-5}"
-SPOT="${SPOT:?set SPOT=A1..C3}"
+# SPOTS="B1 B1 B2 B2 B3 B3": one spot per episode, in order (move the cube during each reset); or SPOT=B2 NUM=3
+if [ -n "${SPOTS:-}" ]; then read -r -a SPOT_LIST <<< "$SPOTS"; NUM=${#SPOT_LIST[@]}
+else NUM="${NUM:-5}"; SPOT="${SPOT:?set SPOT=A1..C3 or SPOTS=\"B1 B2 ...\"}"; SPOT_LIST=(); for ((i=0; i<NUM; i++)); do SPOT_LIST+=("$SPOT"); done; fi
+echo "recording $NUM episodes at spots: ${SPOT_LIST[*]}"
 ROOT="${ROOT:-data/real/station_v3}"
 RESUME=false; [ -d "$ROOT/meta" ] && RESUME=true
 
@@ -20,12 +22,13 @@ lerobot-record \
   --robot.calibration_dir="$ROBOT_CALIB_DIR" --robot.use_degrees="$ROBOT_USE_DEGREES" \
   --robot.cameras="$CAMERAS" \
   --teleop.type="$TELEOP_TYPE" --teleop.port="$TELEOP_PORT" --teleop.id="$TELEOP_ID" \
+  --teleop.calibration_dir="$ROBOT_CALIB_DIR" --teleop.use_degrees="$TELEOP_USE_DEGREES" \
   --dataset.repo_id=local/station --dataset.root="$ROOT" --dataset.push_to_hub=false \
   --dataset.single_task="$TASK" --dataset.num_episodes="$NUM" \
-  --dataset.episode_time_s=30 --dataset.reset_time_s=15 \
+  --dataset.episode_time_s="${EP_TIME:-45}" --dataset.reset_time_s="${RESET_TIME:-15}" \
   --resume="$RESUME" --display_data=true
 
 after=$(python3 -c "import json;print(json.load(open('$ROOT/meta/info.json'))['total_episodes'])")
 mkdir -p data/real
-for ((e=before; e<after; e++)); do echo "$e,$SPOT" >> data/real/spot_log.csv; done
+for ((e=before; e<after; e++)); do echo "$e,${SPOT_LIST[$((e - before))]:-?}" >> data/real/spot_log.csv; done
 echo "real episodes: $after / 50 (spot log: data/real/spot_log.csv)"
