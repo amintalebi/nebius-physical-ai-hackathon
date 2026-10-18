@@ -39,3 +39,7 @@ differently on the day, check whether its version moved before changing the plan
    has only `v3.0.0-EA` / `-beta` / `-beta2(.patch1)` tags. The failure sits in an `&&` chain, so `set -e`
    doesn't stop the script, and `isaaclab.sh --install` is silently skipped. We use branch `release/3.0.0`
    (`0c114a24a`, VERSION 3.0.0, includes the SO-101 asset) and run `isaaclab.sh --install` ourselves (01).
+10. **Isaac Lab API break.** Isaac Lab `c8445b30b` (2026-09-26, "Split image observations into per-modality
+   terms") removed `mdp.image`; the starter still calls it, so env creation fails on `release/3.0.0`.
+   `mdp.image_rgb` takes the same parameters: `sim_patches/isaaclab_release30_compat.patch`. With it, the smoke
+   run collects 3/3 episodes (roadmap 03).
