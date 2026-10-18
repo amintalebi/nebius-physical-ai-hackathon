@@ -1,0 +1,42 @@
+--- a/so101_pickplace/pickplace_env_cfg.py	2026-10-18 11:12:29
++++ b/so101_pickplace/pickplace_env_cfg.py	2026-10-18 11:12:29
+@@ -72,6 +72,28 @@
+ # arm faces +X (same seat as the contrib stack task). Block spawns on the +Y half, pad on the -Y half.
+ CUBE_POSE_RANGE = {"x": (0.16, 0.27), "y": (0.02, 0.13), "z": (CUBE_SIZE / 2, CUBE_SIZE / 2), "yaw": (-0.8, 0.8)}
+ PAD_POSE_RANGE = {"x": (0.16, 0.27), "y": (-0.15, -0.04), "z": (PAD_SIZE[2] / 2, PAD_SIZE[2] / 2), "yaw": (0.0, 0.0)}
++
++# Sim-to-Table: pin the scene to the real station. S2T_CUBE_XY="x,y" centres the cube spawn on one
++# grid spot (+- S2T_JITTER m, yaw +- S2T_YAW rad); S2T_PAD_XY="x,y" fixes the pad where it is taped.
++# Unset = original starter behaviour.
++def _s2t_xy(name):
++    v = os.environ.get(name)
++    return tuple(float(t) for t in v.split(",")) if v else None
++
++
++_S2T_CUBE_XY = _s2t_xy("S2T_CUBE_XY")
++_S2T_PAD_XY = _s2t_xy("S2T_PAD_XY")
++_S2T_JITTER = float(os.environ.get("S2T_JITTER", "0.012"))
++_S2T_YAW = float(os.environ.get("S2T_YAW", "0.8"))
++if _S2T_CUBE_XY:
++    cx, cy = _S2T_CUBE_XY
++    CUBE_POSE_RANGE = {
++        "x": (cx - _S2T_JITTER, cx + _S2T_JITTER), "y": (cy - _S2T_JITTER, cy + _S2T_JITTER),
++        "z": (CUBE_SIZE / 2, CUBE_SIZE / 2), "yaw": (-_S2T_YAW, _S2T_YAW),
++    }
++if _S2T_PAD_XY:
++    px, py = _S2T_PAD_XY
++    PAD_POSE_RANGE = {"x": (px, px), "y": (py, py), "z": (PAD_SIZE[2] / 2, PAD_SIZE[2] / 2), "yaw": (0.0, 0.0)}
+ 
+ # Seat pose (see contrib stack task for the derivation of the Z correction and 90 deg yaw).
+ _SO101_MOUNT_Z = -0.03008
+@@ -105,8 +127,8 @@
+ WRIST_CAM_FORWARD = (0.0, 0.045, -0.055)  # from the mount toward the jaw tips
+ 
+ # Front camera: in front of the table, looking back at the arm and both objects.
+-FRONT_CAM_POS = (0.80, 0.0, 0.42)
+-FRONT_CAM_LOOK_AT = (0.18, 0.0, 0.02)
++FRONT_CAM_POS = tuple(_s2t_xy("S2T_CAM_POS") or (0.80, 0.0, 0.42))
++FRONT_CAM_LOOK_AT = tuple(_s2t_xy("S2T_CAM_LOOK_AT") or (0.18, 0.0, 0.02))
+ 
+ 
+ def quat_xyzw_from_rpy(roll: float, pitch: float, yaw: float) -> tuple[float, float, float, float]:

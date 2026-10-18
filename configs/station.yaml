@@ -1,0 +1,52 @@
+# Everything about OUR physical station. Fill in on arrival (docs/roadmap/02-station-sim-alignment.md).
+# Every value marked MEASURE is a placeholder until someone measures it at the table.
+
+robot:
+  type: so101_follower
+  port: /dev/tty.usbmodemXXXX          # MEASURE: lerobot-find-port
+  id: station_follower                  # MEASURE: id used when the organizers calibrated it
+  # Copy the organizers' calibration file here; scripts read it, never the live cache.
+  calibration_file: configs/calibration/station_follower.json
+  use_degrees: true                     # LeRobot default; must match how real episodes are recorded
+
+teleop:
+  type: so101_leader
+  port: /dev/tty.usbmodemYYYY           # MEASURE
+  id: station_leader
+
+camera:
+  key: front                            # MUST equal the sim camera key kept in the dataset
+  index_or_path: 0                      # MEASURE: lerobot-find-cameras opencv
+  width: 640
+  height: 480
+  fps: 30
+
+task: "pick up the cube and place it on the green pad"   # same string in sim, real and rollout
+
+# Sim -> real joint mapping corrections (s2t/units.py). Start at sign +1 / offset 0,
+# change only on evidence from the open-loop replay test.
+joint_map:
+  signs:   {shoulder_pan: 1, shoulder_lift: 1, elbow_flex: 1, wrist_flex: 1, wrist_roll: 1, gripper: 1}
+  offsets_deg: {shoulder_pan: 0.0, shoulder_lift: 0.0, elbow_flex: 0.0, wrist_flex: 0.0, wrist_roll: 0.0, gripper: 0.0}
+
+# Geometry in the ROBOT BASE frame [m], +X forward from the base, +Y to the robot's left,
+# the same frame as the sim env (starter pickplace_env_cfg.py: base at origin, arm faces +X).
+geometry:
+  pad_center_xy: [0.21, -0.09]          # MEASURE (sim default shown)
+  pad_size_m: 0.09                      # MEASURE
+  cube_size_m: 0.030
+  cube_color: red                       # MEASURE: red|green|blue|yellow (sim USD twins exist for these)
+  # 9 taped grid spots, row-major as seen from the camera. Judges use these in a hidden fixed order.
+  grid_spots_xy:                        # MEASURE all nine
+    A1: [0.16, 0.02]
+    A2: [0.16, 0.075]
+    A3: [0.16, 0.13]
+    B1: [0.215, 0.02]
+    B2: [0.215, 0.075]
+    B3: [0.215, 0.13]
+    C1: [0.27, 0.02]
+    C2: [0.27, 0.075]
+    C3: [0.27, 0.13]
+  # Front camera pose for the sim (starter FRONT_CAM_POS / FRONT_CAM_LOOK_AT), tuned with the overlay check.
+  front_cam_pos: [0.80, 0.0, 0.42]      # MEASURE
+  front_cam_look_at: [0.18, 0.0, 0.02]  # MEASURE
