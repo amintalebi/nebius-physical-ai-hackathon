@@ -29,6 +29,7 @@ import argparse
 import base64
 import csv
 import json
+import os
 import re
 import subprocess
 import sys
@@ -184,7 +185,8 @@ p.add_argument("--name", required=True, help="dataset name as used in configs/da
 p.add_argument("--dataset", type=Path, required=True)
 p.add_argument("--camera", default="front")
 p.add_argument("--base-url", default="http://localhost:8000/v1")
-p.add_argument("--api-key", default="EMPTY")
+p.add_argument("--api-key", default=os.environ.get("REASON_API_KEY", "EMPTY"),
+               help="default: $REASON_API_KEY (Token Factory endpoint), else EMPTY (local vLLM)")
 p.add_argument("--model", default=None, help="default: first model the server lists")
 p.add_argument("--fps", type=int, default=4, help="frames/s sampled by the reasoner (cookbook default 4)")
 p.add_argument("--inline", action="store_true", help="send video bytes instead of a file:// URL")

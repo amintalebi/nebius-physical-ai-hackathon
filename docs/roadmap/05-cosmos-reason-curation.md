@@ -33,26 +33,30 @@ This is the vLLM *reasoner* serve from the NVIDIA/Cosmos cookbook. nebius/nebius
 `nvidia/Cosmos3-Nano` on vLLM, but with `--omni` as a **video generator** (`/v1/videos/sync`). That is a
 different mode and a different endpoint, so don't copy that command here.
 
-### Fallbacks: self-hosting is the only path that earns the points
+### Where the reasoner runs, in order of preference
 
-Nebius Token Factory no longer serves a Cosmos reasoner. `nvidia/Cosmos3-Super-Reasoner` was retired on
-2026-08-31 and returns HTTP 409 (nebius/nebius-physical-ai @ `8195442`,
-`docs/workbench/token-factory-deprecation-verification.md`). Its replacement there, `MiniMaxAI/MiniMax-M3`, is
-not a Cosmos model, so curation done with it does **not** count for the Cosmos Reason rubric line. In order:
+`nvidia/Cosmos3-Super-Reasoner` is no longer on Token Factory's *shared* serverless API (retired 2026-08-31,
+HTTP 409; nebius/nebius-physical-ai @ `8195442`, `docs/workbench/token-factory-deprecation-verification.md`).
+It is still in the Token Factory catalog as a **dedicated endpoint** (regions Finland and US), paid from the
+team's Token Factory credits. Only a Cosmos model counts for the Cosmos Reason rubric line.
 
-1. **Default:** Cosmos3-Nano reasoner on vLLM on our one GPU, command above, beside Isaac or training.
-2. **GPU busy with Transfer:** queue the scoring. It is resumable, so score in the gaps between Transfer batches.
-3. **Nano won't serve:** `nvidia/Cosmos-Reason2-8B` through the same `vllm serve` pattern. The nebius repo has a
-   container for it, validated on H100, but no serve recipe (TODO(verify) the exact flags on the smoke test).
+1. **Token Factory dedicated endpoint, Finland (preferred).** Super is the larger reasoner, so expect better
+   agreement with hand labels than Nano, and it keeps our one GPU free for Isaac, Transfer and training (01).
+   - A dedicated endpoint bills per hour while it is up, idle or not. Check the hourly price against the credits
+     before creating it, and stop it between scoring batches; scoring is resumable.
+   - Put the key in the environment of the box that calls it (`export REASON_API_KEY=…` in your own shell on
+     the VM or laptop), never on a command line or in git. Both scripts read `REASON_API_KEY`.
+   - Smoke test before relying on it: score 1 real episode with `--base-url <endpoint>/v1 --inline` (no shared
+     filesystem with the endpoint, so the video must be sent inline) and check the JSON parses.
+   - The ensemble verifier (10) calls it once per attempt; Finland is the low-latency choice from Berlin.
+     Check the ≤ 5 s latency budget in `watchdog.jsonl`.
+2. **Fallback: Cosmos3-Nano on vLLM on our GPU** (command above), beside Isaac or training, not during the
+   Transfer bulk run. Use it if the endpoint won't start, can't take video, or the credits run out.
+3. **Nano won't serve:** `nvidia/Cosmos-Reason2-8B` through the same `vllm serve` pattern (TODO(verify) flags).
    `cosmos_reason_score.py` takes `--model`, and the prompt and JSON parsing don't change.
-4. **Last resort, never for curation:** Token Factory `MiniMaxAI/MiniMax-M3`
-   (`--base-url https://api.tokenfactory.nebius.com/v1/ --api-key $NEBIUS_TOKEN_FACTORY_KEY --model MiniMaxAI/MiniMax-M3 --inline`).
-   It is acceptable only as the ensemble verifier (10), described as "VLM verifier", not as Cosmos. Its JSON
-   mode returns malformed output. Our scripts already ask for JSON in the prompt and parse it strictly, so
-   don't add `response_format`.
-
-Ask the organizers first (open question 11). If they host a Cosmos reasoner endpoint for the event, use it
-with `--base-url … --api-key … --inline` and skip steps 1-3.
+4. **Never for curation:** Token Factory shared `MiniMaxAI/MiniMax-M3`. Not a Cosmos model; acceptable only as the
+   ensemble verifier (10), described as "VLM verifier". Its JSON mode returns malformed output, and our scripts
+   already ask for JSON in the prompt and parse it strictly, so don't add `response_format`.
 
 ## Commands
 

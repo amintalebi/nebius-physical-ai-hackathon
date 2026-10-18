@@ -62,6 +62,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--ckpts", nargs="+", required=True, help="tried in order, cycling")
     ap.add_argument("--reason-url", required=True)
+    ap.add_argument("--model", default=None, help="default: first model the server lists")
     ap.add_argument("--budget", type=float, default=115, help="seconds; 5 s margin under the 120 s cap")
     ap.add_argument("--attempt-seconds", type=float, default=40)
     ap.add_argument("--spot", default="")
@@ -69,8 +70,9 @@ def main():
 
     from openai import OpenAI
 
-    client = OpenAI(api_key="EMPTY", base_url=a.reason_url)
-    model = client.models.list().data[0].id
+    # Key from the environment, never the command line: $REASON_API_KEY for a Token Factory endpoint.
+    client = OpenAI(api_key=os.environ.get("REASON_API_KEY", "EMPTY"), base_url=a.reason_url)
+    model = a.model or client.models.list().data[0].id
     cam_index = yaml.safe_load((REPO / "configs/station.yaml").read_text())["camera"]["index_or_path"]
     log = REPO / "data/eval/watchdog.jsonl"
     log.parent.mkdir(parents=True, exist_ok=True)
