@@ -1,0 +1,31 @@
+# Dataset mixes. scripts/build_mixes.py applies curation + size limits and merges;
+# scripts/validate_manifest.py checks the result against the rules and writes manifest.json.
+# Rules (brief): real <= 50, total <= 300, main must contain sim-derived data.
+#
+# Controlled ablation: `ablation` is `main` with every Cosmos episode swapped for the raw sim episode
+# it was rendered from. Same trajectories, same actions, same count. Only pixels differ, so any
+# success-rate gap is caused by Cosmos and nothing else. build_mixes.py keeps the twins in sync
+# (an episode dropped from one is dropped from the other).
+#
+#   raw:  uncurated LeRobot v3.0 dataset (after convert_sim_dataset.py + convert_dataset_v21_to_v30)
+#   path: curated copy written by build_mixes.py (what the mixes and the manifest count)
+#   max_episodes: optional; extra episodes are removed evenly across the index range, which keeps the
+#                 per-spot balance because collect_grid.py records spot by spot
+
+caps:
+  real_max: 50
+  total_max: 300
+
+sources:
+  real:         {kind: real,   raw: data/real/station_v3,  path: data/curated/real}
+  sim_raw_A:    {kind: sim,    raw: data/sim/A_v3,         path: data/curated/sim_raw_A,    max_episodes: 105}
+  sim_raw_B:    {kind: sim,    raw: data/sim/B_v3,         path: data/curated/sim_raw_B}
+  sim_cosmos_B: {kind: cosmos, raw: data/cosmos/B_v3,      path: data/curated/sim_cosmos_B, max_episodes: 150, twin: sim_raw_B,
+                 extra_drops: data/curation/cosmos_not_transferred_B_transfer.json}
+
+mixes:
+  main:     [real, sim_raw_A, sim_cosmos_B]
+  ablation: [real, sim_raw_A, sim_raw_B]
+
+# Written by scripts/cosmos_reason_score.py decide
+curation_file: data/curation/decisions.json

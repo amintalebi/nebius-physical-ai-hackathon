@@ -1,0 +1,14 @@
+# datasets, checkpoints, run artifacts: these go to Nebius Object Storage, not git
+data/
+outputs/
+work/
+logs/
+submission/
+reports/*.png
+reports/*.mp4
+
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.DS_Store

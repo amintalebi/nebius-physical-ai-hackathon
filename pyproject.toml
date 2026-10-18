@@ -1,0 +1,17 @@
+[project]
+name = "sim-to-table"
+version = "0.1.0"
+description = "NVIDIA x Nebius Sim to Table hackathon: sim + Cosmos + real teleop -> ACT on SO-101"
+requires-python = ">=3.10"
+# Helpers only. LeRobot, Isaac Lab and Cosmos each live in their own env on the machine that runs them
+# (docs/roadmap/01-critical-path.md); do not try to install them into one venv.
+dependencies = ["numpy", "pyarrow", "pyyaml", "opencv-python-headless"]
+
+[project.optional-dependencies]
+cosmos = ["openai"]
+metrics = ["torch", "transformers"]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
