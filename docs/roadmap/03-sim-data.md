@@ -20,21 +20,31 @@ and the raw material for Cosmos Transfer (04).
   over `geometry.cube_sizes_mm` (`[20, 25, 30, 40]`, `cube_color: blue` in `configs/station.yaml`) and
   writes every (spot × size) into one dataset. Do not oversample one size — the policy must grasp
   all four.
-  - **⚠ Asset gap:** the starter ships cube assets for **25/30/40 mm only** (verified in
-    `assets/cube_blocks/` — no 20 mm USD/STL). To cover 20 mm you must either add a 20 mm cube twin
-    (spawn a `CuboidCfg` cube or a generated 20 mm USD in the env cfg) **or confirm with the
-    organizers that 20 mm is really in the judged set** — do this before collecting on that size.
+  - **20 mm asset:** the starter ships 25/30/40 mm only. `sim_patches/make_cube_20mm.py <starter>/assets/cube_blocks/usd`
+    writes exact 20 mm twins (same 1 mm chamfer, mass 4.4 g fitted from the starter's own 25/30/40 mm
+    estimates). Already generated on `s2t-rtx6000`. We collect 20 **and** 25 mm because the small event
+    cube's size is unconfirmed.
 - **Two disjoint sets.** **A** stays raw in both mixes; **B** is the set Cosmos re-renders. Raw B is
   kept for the controlled ablation (07).
 
-| Set | Per spot × size | Total target | Use |
-|---|---|---|---|
-| A | 3 per size (12/spot total) | 108 | raw sim in `main` and `ablation` |
-| B | 4-5 per size (18/spot total) | 162 | Cosmos-transferred in `main`, raw in `ablation` (curation trims to fit 300) |
+| Set | `--per-spot` (total, split over sizes) | Per size per spot | Total | Use |
+|---|---|---|---|---|
+| A | 12 | 3 | 108 | raw sim in `main` and `ablation` |
+| B | 18 | 4-5 (remainder rotates by spot) | 162 | Cosmos-transferred in `main`, raw in `ablation` (curation trims to fit 300) |
 
-"Per spot × size" keeps the four sizes balanced within each spot. Attempts ≈ episodes / 0.75. At
-~25 s per attempt: A ≈ 1 h, B ≈ 1.5 h on one VM. Run A and B as two processes if the GPU has headroom
-(watch `nvidia-smi`), or start B first because Cosmos waits on it.
+`--per-spot` is the **total per spot**; `collect_grid.py` splits it over the sizes (`s2t/sampling.py`) and prints
+the per-size totals before starting. Each (set, size, spot) gets its own `--seed`: the starter defaults to
+seed 0, so without it every spot replays the same yaw sequence and set B duplicates set A.
+
+Attempts ≈ episodes / 0.8 (measured 83 % expert success on red 30 mm). One Isaac launch per (size, spot)
+costs ~1 min of startup, i.e. 36 launches per set. **Fast path: one process per size in parallel**, each
+its own dataset, merged after the v3 conversion (`lerobot-edit-dataset … merge`):
+
+```bash
+for s in 20 25 30 40; do
+  python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 3 --sizes $s --dataset-name sim_A_$s &
+done
+```
 
 ## Cube-size grasp calibration (do before bulk, once per size)
 
@@ -60,7 +70,7 @@ python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 3
 python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 18 --dataset-name sim_B
 python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 12 --dataset-name sim_A
 # narrow to one size (e.g. re-sampling a failed size)
-python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 12 --sizes 40 --dataset-name sim_A
+python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 3 --sizes 40 --dataset-name sim_A_40 --resume
 # convert each (units + single camera), then to v3 for merging
 python scripts/convert_sim_dataset.py --src $DATASETS_DIR/local/sim_A --dst data/sim/A_real_units
 ```
