@@ -4,50 +4,53 @@
 **Assumption:** ~9 working hours before the cutoff (confirm exact cutoff: [open-questions](open-questions.md)).
 Times are T+hours from start. Three people: **R** (robot/station), **S** (sim + Cosmos), **T** (training + Nebius + submission).
 
-## Machines
+## Machines (event setup: one GPU for everything)
 
-| Box | GPU | Runs | Why this one |
-|---|---|---|---|
-| VM-sim | 1× RTX PRO 6000 (`gpu-rtx6000`, 96 GB, RT cores) or L40S (`gpu-l40s-d`) | Isaac Sim collection | Isaac Sim needs RT cores; H100/H200 cannot render it (starter README) |
-| VM-gpu | 2-8× H100/H200 (or the RTX PRO 6000 box once collection is done) | Cosmos Transfer, Cosmos Reason (vLLM), ACT training | Transfer 2B needs 65.4 GB; parallel GPUs = parallel episodes |
-| Station laptop | none needed | teleop, rollout, eval | ACT-resnet18 runs on CPU/MPS |
+The event gives each team **one** GPU in project `group02-project`, region **`uk-south2`**
+([participant guide](https://github.com/dariolaportanebius/nebius-starter-skill)). Our VM:
 
-If quota allows only one VM: one RTX PRO 6000 does everything in sequence (sim → Transfer → train), and
-the Cosmos episode count drops (see 04, budget formula).
+| Box | GPU | Runs |
+|---|---|---|
+| `s2t-rtx6000` (`gpu-rtx6000-a` / `1gpu-24vcpu-218gb`, on-demand, `ubuntu24.04-cuda13.0`, 400 GiB, static public IP) | 1× RTX PRO 6000 Blackwell, 96 GB, RT cores, driver 580 / CUDA 13.0 | Isaac Sim, Cosmos Transfer, Cosmos Reason (vLLM), ACT training, **sharing one GPU** |
+| Station laptop | none needed | teleop, rollout, eval (ACT-resnet18 runs on CPU/MPS) |
 
-### Nebius platform / preset names
+`ssh ubuntu@<ip>` with the key in its cloud-init. Get the IP with
+`nebius --profile hackathon compute instance get-by-name --parent-id <project> --name s2t-rtx6000`.
+Team limits: 3 VMs, 20 non-GPU vCPUs, 4 disks / 500 GiB (100 GiB left), **1 public IP (used by this VM)**,
+1 bucket of 200 GiB. A teammate who needs a second box gets a CPU VM or a CPU DevLab, never a second GPU.
 
-From nebius/nebius-physical-ai @ `8195442` (`docs/workbench/`, `research/lerobot-deploy/terraform`). Region
-`eu-north1` unless the organizers say otherwise. Check against the quota we actually get (open question 11).
+### Sharing the GPU (96 GB)
 
-| Box | `platform` | `preset` (1 GPU) | Multi-GPU preset |
-|---|---|---|---|
-| VM-sim | `gpu-rtx6000` | `1gpu-24vcpu-218gb` | — |
-| VM-sim (fallback) | `gpu-l40s-d` | `1gpu-16vcpu-96gb` | `2gpu-64vcpu-384gb`, `4gpu-128vcpu-768gb` |
-| VM-sim (fallback) | `gpu-l40s-a` | `1gpu-40vcpu-160gb` | — |
-| VM-gpu | `gpu-h100-sxm` / `gpu-h200-sxm` | `1gpu-16vcpu-200gb` | `8gpu-128vcpu-1600gb` |
+| Job | VRAM (approx.) | Runs alongside |
+|---|---|---|
+| Isaac Sim collection | ~10-20 GB | Reason, training |
+| Cosmos Transfer 2.5 (2B) | ~65 GB | Reason only if `nvidia-smi` shows room; **not** Isaac (render + diffusion contend for the same SMs) |
+| Cosmos Reason, Cosmos3-Nano on vLLM | ~16-17 GB (`--gpu-memory-utilization 0.2`) | anything except Transfer at full size |
+| ACT training, resnet18, batch 32 | ~5-15 GB per run | main + ablation (+ seed 2) **concurrently** |
 
-Boot image family `ubuntu24.04-cuda12`. Use **non-preemptible** for VM-sim (a long Isaac install lost to
-preemption costs an hour) and for the main training run (08). If you want Terraform for VM-gpu instead of the
-console, `research/lerobot-deploy/terraform` in that repo creates one GPU VM with LeRobot installed by cloud-init
-(`terraform apply -var gpu_platform=gpu-h100-sxm`). Its default `lerobot_version` is 0.5.1: set it to the
-version the station laptop records with, so the v3.0 datasets and the trained checkpoint load on both sides.
+Order of the day on the GPU: Isaac smoke → Transfer smoke (measure s/segment) → Isaac bulk (sets A and B,
+Reason scoring real data alongside) → Transfer bulk on B → train main + ablation concurrently. One GPU means the
+Cosmos budget is the 1-GPU line of 04's formula: plan **~30-40 Cosmos episodes, not 150**, and set
+`max_episodes` in `configs/data_mix.yaml` from the measured number.
 
-Don't adopt the rest of that repo's stack today (`npa` workflows, SkyPilot, Managed Kubernetes, PAIDF,
-the Sim2Real engine). It needs a Linux operator host and a cluster we don't have time to stand up, and its
-Isaac Lab and LeRobot images are quarantined.
+Always pin a GPU job's memory (vLLM `--gpu-memory-utilization`, `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`)
+and watch `nvidia-smi` before starting the next one. An OOM kill of the Isaac run costs the episodes since its
+last flush.
+
+Not adopted from nebius/nebius-physical-ai @ `8195442`: `npa` workflows, SkyPilot, Managed Kubernetes, PAIDF, the
+Sim2Real engine (they need a cluster and a Linux operator host), and its quarantined Isaac Lab / LeRobot images.
 
 ## Timeline
 
 | T+ | R (station) | S (sim + Cosmos) | T (train + Nebius) | Gate |
 |---|---|---|---|---|
-| 0:00-0:30 | Ask the [open questions](open-questions.md). Copy the calibration JSON. Measure grid spots, pad, camera pose → `configs/station.yaml` | Create VM-sim, run `nebius/setup_vm.sh` from the starter (long install, start it first) | Create VM-gpu + bucket + access key (11). `nebius_s3.py check`. Install LeRobot. Start a `nebius/usage.md` log | — |
-| 0:30-2:00 | **Smoke test**: record 3 real episodes, push to VM-gpu | Smoke: `NUM_EPISODES=3` on 1 spot, convert units, copy to VM-gpu | **Smoke**: merge 3 real + 3 sim, train 2k steps, copy checkpoint to the laptop, `rollout.sh` runs on the arm (moving at all, not succeeding) | **G1: end-to-end pipe works**. If not, fix this before anything else |
+| 0:00-0:30 | Ask the [open questions](open-questions.md). Copy the calibration JSON. Measure grid spots, pad, camera pose → `configs/station.yaml` | On `s2t-rtx6000`: run `nebius/setup_vm.sh` from the starter (long install, start it first) | Create the bucket, load the SecretStash keys (11), `nebius_s3.py check`. Install LeRobot on the VM. Start a `nebius/usage.md` log | — |
+| 0:30-2:00 | **Smoke test**: record 3 real episodes, push to the VM | Smoke: `NUM_EPISODES=3` on 1 spot, convert units | **Smoke**: merge 3 real + 3 sim, train 2k steps, copy checkpoint to the laptop, `rollout.sh` runs on the arm (moving at all, not succeeding) | **G1: end-to-end pipe works**. If not, fix this before anything else |
 | 1:00-2:00 | **Open-loop replay test** of a converted sim episode on the real arm (02) | Overlay check, adjust sim camera (02) | Cosmos Transfer smoke on 1 episode, measure s/segment (04) | **G2: replay picks the cube** → units trusted |
 | 2:00-4:00 | Teleop 45 demos, 5 per spot (06) | `collect_grid.py`: set A (12/spot) and set B (18/spot) | Start vLLM Reasoner; score real episodes as they land (05). Hand-label 20 | — |
 | 3:00-5:30 | Hand-label Cosmos samples (visual QA) | Cosmos Transfer on set B (04), then metrics | Score sim A, sim B, Cosmos B. `decide`. `agree` | **G3: Reason agreement κ ≥ 0.6** or tighten the rule |
 | 5:30-6:00 | — | — | Apply drops, convert v2.1→v3, merge `main` + `ablation`, `validate_manifest.py` | **G4: manifest passes** |
-| 6:00-7:15 | Station free: re-record weakest spots if any slots are left | Ensemble prep (10) | Train main + ablation in parallel (2 GPUs) + 1 extra seed of main | — |
+| 6:00-7:15 | Station free: re-record weakest spots if any slots are left | Ensemble prep (10) | Train main + ablation concurrently on the one GPU, + seed 2 of main if steps/s allows | — |
 | 7:15-8:30 | **Eval**: ablation 9 trials, main 18 blind trials, ensemble 9 (09/10) | | Upload as results land | **G5: choose the checkpoint** (09 rule) |
 | 8:30-9:00 | Freeze. Rollout command card for the judges | | `sync_to_nebius.sh`, verify the listing (11) | **G6: list-back shows everything** |
 

@@ -36,7 +36,7 @@ retraining needed (`TE=0.01 ./scripts/rollout.sh`). Compare it in eval (09).
 ## Nebius evidence (collect it as you go)
 
 Keep `nebius/usage.md` in the submission, appended during the day:
-- `nebius compute instance list` output (VM ids, platform `gpu-h100…`/`gpu-rtx6000`, preset) at creation
+- `nebius compute instance list` output (VM id, platform `gpu-rtx6000-a`, preset `1gpu-24vcpu-218gb`) at creation
 - `nvidia-smi` snapshot during training
 - `logs/train_*.log` and the loss curves (W&B screenshots if `WANDB=true`, else the log)
 - wall-clock per stage (sim collection, Cosmos per segment, training steps/s)

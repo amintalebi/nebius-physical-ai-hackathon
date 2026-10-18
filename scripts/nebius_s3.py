@@ -5,15 +5,16 @@ Adapted from nebius/nebius-physical-ai @ 8195442 research/lerobot-deploy/s3_sync
 same endpoint scheme and boto3 calls, plus directory upload that skips files already uploaded
 (same key and size), so it can be re-run after every checkpoint save on a preemptible VM.
 
-    export NEBIUS_REGION=eu-north1                      # endpoint = https://storage.<region>.nebius.cloud
-    export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=...  # or AWS_PROFILE=nebius (~/.aws/credentials)
+    # Event defaults: region uk-south2, endpoint https://storage.uk-south2.nebius.cloud. Override with
+    # NEBIUS_S3_ENDPOINT / AWS_ENDPOINT_URL and NEBIUS_REGION / AWS_DEFAULT_REGION (SecretStash field names).
+    export AWS_PROFILE=nebius     # keys from SecretStash hackathon-object-storage, entered via `aws configure`
 
     python scripts/nebius_s3.py check s3://<bucket>/<team>/        # T+0:30: write, read back, delete 1 byte
     python scripts/nebius_s3.py put outputs/act_main s3://<bucket>/<team>/outputs/act_main
     python scripts/nebius_s3.py ls  s3://<bucket>/<team>/
     python scripts/nebius_s3.py get s3://<bucket>/<team>/outputs/act_main/checkpoints/040000 ckpt/
 
-Keys come from a service-account access key (docs/roadmap/11-submission.md, "Credentials").
+Keys: docs/roadmap/11-submission.md, "Credentials".
 """
 
 from __future__ import annotations
@@ -26,11 +27,12 @@ from pathlib import Path
 
 
 def endpoint() -> str:
-    return os.environ.get("NEBIUS_S3_ENDPOINT") or f"https://storage.{region()}.nebius.cloud"
+    return (os.environ.get("NEBIUS_S3_ENDPOINT") or os.environ.get("AWS_ENDPOINT_URL")
+            or f"https://storage.{region()}.nebius.cloud")
 
 
 def region() -> str:
-    return os.environ.get("NEBIUS_REGION", "eu-north1")
+    return os.environ.get("NEBIUS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or "uk-south2"
 
 
 def parse_s3_uri(uri: str) -> tuple[str, str]:

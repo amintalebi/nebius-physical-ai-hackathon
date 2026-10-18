@@ -18,9 +18,13 @@ def test_parse_s3_uri():
 
 
 def test_endpoint_follows_region(monkeypatch):
-    monkeypatch.delenv("NEBIUS_S3_ENDPOINT", raising=False)
-    monkeypatch.setenv("NEBIUS_REGION", "us-central1")
-    assert endpoint() == "https://storage.us-central1.nebius.cloud"
+    for v in ("NEBIUS_S3_ENDPOINT", "AWS_ENDPOINT_URL", "NEBIUS_REGION", "AWS_DEFAULT_REGION"):
+        monkeypatch.delenv(v, raising=False)
+    assert endpoint() == "https://storage.uk-south2.nebius.cloud"  # event default
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-north1")
+    assert endpoint() == "https://storage.eu-north1.nebius.cloud"
+    monkeypatch.setenv("AWS_ENDPOINT_URL", "https://from-secretstash.test")
+    assert endpoint() == "https://from-secretstash.test"
     monkeypatch.setenv("NEBIUS_S3_ENDPOINT", "https://example.test")
     assert endpoint() == "https://example.test"
 

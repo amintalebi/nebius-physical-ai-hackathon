@@ -2,11 +2,11 @@
 
 **Points:** Accuracy (sim covers the spots), required by the rules (main must include sim-derived data),
 and the raw material for Cosmos Transfer (04).
-**Time box:** smoke T+0:30-1:30; bulk T+2:00-4:00 on VM-sim (~25 s per attempt, ~75 % expert success).
+**Time box:** smoke T+0:30-1:30; bulk T+2:00-4:00 on `s2t-rtx6000` (~25 s per attempt, ~75 % expert success).
 
 ## Inputs
 
-- VM-sim with the starter installed (`nebius/setup_vm.sh`), `env.sh` edited, patch applied (02)
+- `s2t-rtx6000` with the starter installed (`nebius/setup_vm.sh`), `env.sh` edited, patch applied (02)
 - `configs/station.yaml` filled in (02)
 
 ## Design
@@ -52,4 +52,4 @@ Keep the v2.1 converted copy of B: Cosmos (04) works on per-episode mp4s, which 
 
 - Expert success < 50 % on some spot → that spot is at the edge of the reachable workspace for the
   scripted IK. Keep what it produces; real teleop (06) gives that spot extra demos.
-- VM-sim install not done by T+1:30 → use the RTX PRO 6000 box for both sim and Cosmos, sequentially.
+- Isaac install on `s2t-rtx6000` not done by T+1:30 → do the Transfer smoke (04) on the same GPU while you wait.

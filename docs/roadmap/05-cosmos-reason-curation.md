@@ -17,14 +17,16 @@ Applied to every source: real, sim A, sim B, Cosmos B. Why each clause:
 A Cosmos B episode dropped for `visual_defect` is also dropped from raw B, so the ablation stays a twin
 of main (07).
 
-## Serve the reasoner (VM-gpu)
+## Serve the reasoner (on `s2t-rtx6000`)
 
-Cosmos3-Nano reasoner needs ~16-17 GB with vLLM (NVIDIA/Cosmos `cookbooks/cosmos3/reasoner/README.md`),
-so it can share a GPU box with training. Don't put it on a GPU that is running Transfer (65 GB); give it its own.
+Cosmos3-Nano reasoner needs ~16-17 GB with vLLM (NVIDIA/Cosmos `cookbooks/cosmos3/reasoner/README.md`).
+We have one GPU (01), so it shares it with Isaac Sim or training. `--gpu-memory-utilization 0.2` keeps vLLM from
+claiming the whole card. Stop it during the Transfer bulk run unless `nvidia-smi` shows room.
 
 ```bash
 vllm serve nvidia/Cosmos3-Nano --tensor-parallel-size 1 --mm-encoder-tp-mode data --async-scheduling \
-  --allowed-local-media-path / --media-io-kwargs '{"video": {"num_frames": -1}}' --port 8000
+  --allowed-local-media-path / --media-io-kwargs '{"video": {"num_frames": -1}}' --port 8000 \
+  --gpu-memory-utilization 0.2   # ~19 GB of 96; raise to 0.25 if it fails to fit the KV cache
 ```
 
 This is the vLLM *reasoner* serve from the NVIDIA/Cosmos cookbook. nebius/nebius-physical-ai also serves
@@ -38,9 +40,8 @@ Nebius Token Factory no longer serves a Cosmos reasoner. `nvidia/Cosmos3-Super-R
 `docs/workbench/token-factory-deprecation-verification.md`). Its replacement there, `MiniMaxAI/MiniMax-M3`, is
 not a Cosmos model, so curation done with it does **not** count for the Cosmos Reason rubric line. In order:
 
-1. **Own GPU (default):** Cosmos3-Nano reasoner on vLLM, command above, ~16-17 GB.
-2. **No spare GPU:** run it on a training GPU. ACT-resnet18 at batch 32 leaves room on an 80 GB H100. Start
-   vLLM with `--gpu-memory-utilization 0.3` so it doesn't take the whole card, then start training.
+1. **Default:** Cosmos3-Nano reasoner on vLLM on our one GPU, command above, beside Isaac or training.
+2. **GPU busy with Transfer:** queue the scoring. It is resumable, so score in the gaps between Transfer batches.
 3. **Nano won't serve:** `nvidia/Cosmos-Reason2-8B` through the same `vllm serve` pattern. The nebius repo has a
    container for it, validated on H100, but no serve recipe (TODO(verify) the exact flags on the smoke test).
    `cosmos_reason_score.py` takes `--model`, and the prompt and JSON parsing don't change.

@@ -21,33 +21,27 @@ ensemble/                    README.md (design) + its eval rows
 
 ## Credentials (T+0:00-0:30, owner T)
 
-Use the organizers' bucket if they give one (open question 3); otherwise create our own. Object Storage takes
-S3 access keys that belong to a **service account**, not to your user. These are the same `nebius` CLI steps
-that nebius/nebius-physical-ai @ `8195442` automates in `research/lerobot-deploy/environment.sh`:
+The event already made the keys: SecretStash entry **`hackathon-object-storage`** in our project holds
+`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION=uk-south2`,
+`AWS_ENDPOINT_URL=https://storage.uk-south2.nebius.cloud` and `ACCESS_KEY_EXPIRES_AT`
+([participant guide](https://github.com/dariolaportanebius/nebius-starter-skill) §6). Don't create service accounts or keys.
+
+1. **Bucket (once per team):** console → Storage → Object Storage → Create bucket. Name unique in the region
+   (e.g. `s2t-group02-<suffix>`), class **Standard** with **Force storage class**, size **200 GiB**, versioning off.
+   We get exactly one bucket, so check whether a teammate made it first.
+2. **Keys on each box that uploads (the VM and the laptop):** console → SecretStash → `hackathon-object-storage` →
+   primary version. Enter them at the prompts of `aws configure --profile nebius` (region `uk-south2`), never in a
+   command line, chat, git or the bucket. Check `ACCESS_KEY_EXPIRES_AT` is after the cutoff.
+3. **Prove write access now, not at T+8:30:**
 
 ```bash
-export NEBIUS_TENANT_ID=tenant-… NEBIUS_PROJECT_ID=project-… NEBIUS_REGION=eu-north1
-nebius storage bucket create --name <bucket> --parent-id $NEBIUS_PROJECT_ID     # skip if organizers gave one
-SA=$(nebius iam service-account create --parent-id $NEBIUS_PROJECT_ID --name s2t-storage --format json | jq -r .metadata.id)
-EDITORS=$(nebius iam group get-by-name --parent-id $NEBIUS_TENANT_ID --name editors --format json | jq -r .metadata.id)
-nebius iam group-membership create --parent-id $EDITORS --member-id $SA       # needs tenant admin; else ask organizers
-KEY=$(nebius iam v2 access-key create --parent-id $NEBIUS_PROJECT_ID --name s2t-key \
-        --account-service-account-id $SA --format json | jq -r .metadata.id)
-export AWS_ACCESS_KEY_ID=$(nebius iam v2 access-key get --id $KEY --format json | jq -r .status.aws_access_key_id)
-export AWS_SECRET_ACCESS_KEY=$(nebius iam v2 access-key get-secret --id $KEY --format json | jq -r .secret)
-```
-
-The secret is shown once. Put it in `~/.aws/credentials` under `[nebius]` on every box that uploads (VM-gpu,
-VM-sim, laptop), never in git. Then prove write access **now**, not at T+8:30:
-
-```bash
-uv run --with boto3 python scripts/nebius_s3.py check s3://<bucket>/<team>/   # writes, reads back, deletes 1 byte
+AWS_PROFILE=nebius uv run --with boto3 python scripts/nebius_s3.py check s3://<bucket>/<team>/   # writes, reads back, deletes 1 byte
 ```
 
 During the day, `nebius_s3.py put` mirrors a folder and skips files already uploaded (same key and size). Run it
-after each checkpoint save so a preempted VM loses nothing:
+after each checkpoint save, so outputs survive the VM:
 `python scripts/nebius_s3.py put outputs/act_main s3://<bucket>/<team>/outputs/act_main`.
-The endpoint is `https://storage.<region>.nebius.cloud` for both this script and the aws CLI.
+Both this script and `sync_to_nebius.sh` default to `uk-south2` and `https://storage.uk-south2.nebius.cloud`.
 
 ## Upload
 

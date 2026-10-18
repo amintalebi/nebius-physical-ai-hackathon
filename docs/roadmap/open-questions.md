@@ -15,5 +15,5 @@ Each one changes a decision in the plan; the "default" column is what we do with
 | 8 | Are we allowed to add a wrist camera, or is the single mounted camera fixed? | Camera features (02) | Single mounted camera |
 | 9 | Is the cube colour/size the one in the kit (30 mm, colour?) and the pad 90 mm? | `configs/station.yaml` | Measure |
 | 10 | Is GROOT allowed as an ensemble member alongside ACT for the main checkpoint ("ACT or GROOT")? | 10 | ACT only for main |
-| 11 | Which Nebius GPU quota do we have (H100 count, RTX PRO 6000 / L40S availability)? Do the organizers host a Cosmos reasoner endpoint? (Token Factory retired its Cosmos3 reasoner on 2026-08-31, see 05) | 01 machine plan, 04 budget, 05 | 1 RTX PRO 6000 + 2 H100; reasoner self-hosted on vLLM |
+| 11 | ~~Which Nebius GPU quota do we have?~~ **Answered (participant guide): 1× RTX PRO 6000, `gpu-rtx6000-a`, uk-south2.** Still open: do the organizers host a Cosmos reasoner endpoint? (Token Factory retired its Cosmos3 reasoner on 2026-08-31, see 05) | 01 machine plan, 04 budget, 05 | Reasoner self-hosted on vLLM on our GPU |
 | 12 | Calibration: may we use the organizers' calibration file as-is (and copy it), and will it stay unchanged until judging? | Unit conversion depends on it | Yes; never recalibrate |

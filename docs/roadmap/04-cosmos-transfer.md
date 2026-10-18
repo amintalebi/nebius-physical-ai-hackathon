@@ -1,7 +1,7 @@
 # 04 · Cosmos Transfer 2.5
 
 **Points:** Cosmos Transfer 10 + the main lever for Accuracy (sim pixels that look like our table).
-**Time box:** smoke T+1:00-2:00; bulk T+3:00-5:30 on VM-gpu.
+**Time box:** smoke T+1:00-2:00; bulk T+3:00-5:30 on `s2t-rtx6000`, after Isaac collection stops (one GPU, see 01).
 
 ## What "structure-preserving toward the real look" means here
 
@@ -28,7 +28,9 @@ vs **~500 s base** (diffusion only). A 10 s episode is ~300 frames = 4 segments.
 N_cosmos_episodes = floor( GPUs × hours_available × 3600 / (4 × seconds_per_segment_measured × variants) )
 ```
 
-Example: 8 GPUs × 2 h, measured 100 s/segment end-to-end → 144 episodes. With 2 GPUs, 36.
+Example: 8 GPUs × 2 h, measured 100 s/segment end-to-end → 144 episodes. **Our event setup is 1 GPU**: 1 × 2.5 h at
+100 s/segment → 22 episodes; at the documented ~65 s distilled → 34. Run `prepare --gpus 1` and set
+`max_episodes` for `sim_cosmos_B` in `configs/data_mix.yaml` to what was actually transferred.
 Use `--model=edge/distilled --num-steps 4` unless the smoke test shows the distilled output breaking
 geometry. Try `"resolution": "480"` on the smoke test if time is tight (TODO(verify) quality; the input is 480p anyway).
 
@@ -55,7 +57,7 @@ python scripts/cosmos_metrics.py --sim data/sim/B_real_units --cosmos data/cosmo
     --real data/real/station_v3 --out reports/cosmos_metrics.json
 ```
 
-Install on VM-gpu per cosmos-transfer2.5 `docs/setup.md` (separate venv). Check `python examples/inference.py --help`
+Install on the VM per cosmos-transfer2.5 `docs/setup.md` (separate venv). Check `python examples/inference.py --help`
 for the guardrail flag spelling before the bulk run; pass extra flags after `run … --`.
 
 ## Acceptance check (numbers, not impressions)
