@@ -62,6 +62,13 @@ for the guardrail flag spelling before the bulk run; pass extra flags after `run
 **disabled** (`disable_guardrails` in `cosmos_transfer2/config.py`): the guardrail stack pulls Meta's gated
 `Llama-Guard-3-8B`, which our token can't access. Our inputs are our own sim renders.
 
+Smoke-test findings (commit 2ff49d0): `run` now passes `--disable-guardrails` itself, puts the Cosmos venv
+`bin/` on PATH (weights are fetched with `uvx hf download`) and sets `COSMOS_EXPERIMENTAL_CHECKPOINTS=1` for
+`edge/distilled` (otherwise that model is not registered). `--style-image` is optional (prompt-only; Cosmos then
+uses a frame of the sim input as image context). **The HF account also needs access to the gated
+`nvidia/Cosmos-Predict2.5-2B`**: every model loads its Wan2.1 tokenizer (`tokenizer.pth`) from there, and the
+distilled config additionally fetches `robot/action-cond/..._ema_bf16.pt` from it at import time.
+
 ## Acceptance check (numbers, not impressions)
 
 | Check | Pass | Tool |

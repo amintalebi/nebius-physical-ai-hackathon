@@ -56,6 +56,33 @@ last flush.
 Not adopted from nebius/nebius-physical-ai @ `8195442`: `npa` workflows, SkyPilot, Managed Kubernetes, PAIDF, the
 Sim2Real engine (they need a cluster and a Linux operator host), and its quarantined Isaac Lab / LeRobot images.
 
+## Sim-first phase (no arm access yet)
+
+The organizers: the judging stations match the starter repo's scene, and arm time comes after we show a working
+sim. So the first milestone is a **measured sim policy**, not the real-arm smoke test.
+
+- **Geometry:** the starter scene *is* the station (cube 30 mm red, pad 90 mm at (0.21, -0.09), front camera at
+  (0.80, 0, 0.42) → (0.18, 0, 0.02), C270-like 640x480). `configs/station.yaml` already holds these values, and
+  its 3x3 grid spans the starter's cube area (x 0.16-0.27, y 0.02-0.13). Confirm the taped spots at the station.
+- **Units:** the starter writes joints in LeRobot's `use_degrees=False` convention (`so101_units.py`, README
+  "Dataset conventions"), so sim training and sim eval need **no conversion and no calibration file**. On the
+  real arm, record and roll out with `--robot.use_degrees=false`, then verify with the open-loop replay (02).
+- **Loop** (all on `s2t-rtx6000`):
+
+```bash
+python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 12 --dataset-name sim_A
+cp -r ~/work/datasets/local/sim_A ~/work/data/sim/A && \
+  ~/work/env_lerobot/bin/python -m lerobot.scripts.convert_dataset_v21_to_v30 --repo-id=local/sim_A --root=data/sim/A --push-to-hub=false
+~/work/env_lerobot/bin/lerobot-train --dataset.repo_id=local/sim_A --dataset.root=data/sim/A --policy.type=act \
+  --policy.device=cuda --policy.push_to_hub=false --output_dir=outputs/act_sim_A --steps=20000 --batch_size=32 …
+~/work/env_lerobot/bin/python scripts/act_server.py --ckpt outputs/act_sim_A/checkpoints/last/pretrained_model &
+$ISAACLAB_PY scripts/eval_act_in_sim.py --per-spot 2 --ckpt-name act_sim_A --out reports/sim_eval.jsonl --headless
+```
+
+- **Gate S1 (before asking for the arm):** `eval_act_in_sim.py` reports a success rate per spot on all 9 spots,
+  with videos. Plumbing verified 2026-10-18 on the 3-episode smoke set (300-step model, 1 trial, timeout as
+  expected): server, observations, actions, success test, jsonl and mp4 all work.
+
 ## Timeline
 
 | T+ | R (station) | S (sim + Cosmos) | T (train + Nebius) | Gate |
