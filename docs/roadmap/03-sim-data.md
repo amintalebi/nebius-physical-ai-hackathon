@@ -15,22 +15,21 @@ and the raw material for Cosmos Transfer (04).
   half the table (the starter default) spend most demos on places the judges never use. We spawn at
   each spot ± 12 mm (tape placement is approximate) with yaw ± 0.8 rad, the pad fixed where it is taped.
 - **Equal episodes per spot.** One spot without data is one judged trial lost.
-- **Cube size varies: blue in 20/25/30/40 mm.** The event cubes are blue and may be any of **four**
-  sizes across judged trials, so the sim must cover **all four** for every spot. `collect_grid.py` loops
-  over `geometry.cube_sizes_mm` (`[20, 25, 30, 40]`, `cube_color: blue` in `configs/station.yaml`) and
-  writes every (spot × size) into one dataset. Do not oversample one size — the policy must grasp
-  all four.
-  - **20 mm asset:** the starter ships 25/30/40 mm only. `sim_patches/make_cube_20mm.py <starter>/assets/cube_blocks/usd`
-    writes exact 20 mm twins (same 1 mm chamfer, mass 4.4 g fitted from the starter's own 25/30/40 mm
-    estimates). Already generated on `s2t-rtx6000`. We collect 20 **and** 25 mm because the small event
-    cube's size is unconfirmed.
+- **Cube size varies: blue, 25/30/40 mm** (confirmed with the organizers 2026-10-18, photo of the three
+  cubes). The starter ships blue USD twins for exactly these sizes (`assets/cube_blocks/usd/cube_{25,30,40}mm_blue.usda`,
+  same 1 mm chamfered PLA blocks). `collect_grid.py` loops over `geometry.cube_sizes_mm` and splits the per-spot
+  budget evenly over the sizes.
+  - **Small cubes need `sim_patches/small_cube_grasp.patch`.** The expert closes with its grasp point 8 mm above
+    the block centre and the jaw tips ~22 mm below that, i.e. 14 mm below the centre: fine for 30 mm (tips 1 mm
+    above the table), inside the table for 25 mm (-1.5 mm) and 20 mm (-4 mm, measured 0/10 successes). The patch
+    keeps the tips ≥ 1 mm above the table and shifts the place height by the same amount; 30/40 mm unchanged.
 - **Two disjoint sets.** **A** stays raw in both mixes; **B** is the set Cosmos re-renders. Raw B is
   kept for the controlled ablation (07).
 
 | Set | `--per-spot` (total, split over sizes) | Per size per spot | Total | Use |
 |---|---|---|---|---|
-| A | 12 | 3 | 108 | raw sim in `main` and `ablation` |
-| B | 18 | 4-5 (remainder rotates by spot) | 162 | Cosmos-transferred in `main`, raw in `ablation` (curation trims to fit 300) |
+| A | 12 | 4 | 108 | raw sim in `main` and `ablation` |
+| B | 18 | 6 | 162 | Cosmos-transferred in `main`, raw in `ablation` (curation trims to fit 300) |
 
 `--per-spot` is the **total per spot**; `collect_grid.py` splits it over the sizes (`s2t/sampling.py`) and prints
 the per-size totals before starting. Each (set, size, spot) gets its own `--seed`: the starter defaults to
@@ -41,8 +40,8 @@ costs ~1 min of startup, i.e. 36 launches per set. **Fast path: one process per 
 its own dataset, merged after the v3 conversion (`lerobot-edit-dataset … merge`):
 
 ```bash
-for s in 20 25 30 40; do
-  python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 3 --sizes $s --dataset-name sim_A_$s &
+for s in 25 30 40; do
+  python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 4 --sizes $s --dataset-name sim_A_$s &
 done
 ```
 
@@ -50,7 +49,7 @@ done
 
 The starter's scripted grasp is tuned for **30 mm**; `GRASP_POINT_OFFSET` scales its horizontal centre
 with `CUBE_SIZE/2`, but the empirical constants (−0.008, +0.0125, 0.005, −0.062) were calibrated on the
-30 mm cube. Validate 20/25/40 before spending the episode budget:
+30 mm cube. Validate 25/40 before spending the episode budget:
 
 - **Smoke per size:** `collect_grid.py --sizes 20 --spots B2 --per-spot 5` (then `25`, `30`, `40`) and watch
   the `collect.log` success lines. **Pass:** ≥ 3/5 episodes per size lift and place the cube
@@ -70,7 +69,7 @@ python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 3
 python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 18 --dataset-name sim_B
 python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 12 --dataset-name sim_A
 # narrow to one size (e.g. re-sampling a failed size)
-python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 3 --sizes 40 --dataset-name sim_A_40 --resume
+python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 4 --sizes 40 --dataset-name sim_A_40 --resume
 # convert each (units + single camera), then to v3 for merging
 python scripts/convert_sim_dataset.py --src $DATASETS_DIR/local/sim_A --dst data/sim/A_real_units
 ```
@@ -89,7 +88,7 @@ Keep the v2.1 converted copy of B: Cosmos (04) works on per-episode mp4s, which 
 **Smoke result (2026-10-18, `s2t-rtx6000`):** 3/3 expert successes at B2, ~20 s per attempt (faster than the
 ~25 s the starter README quotes), 915 frames, v2.1 with `front` + `wrist` 640x480 @ 30 fps. Uploaded to
 `s3://s2t-group02-a66c17/data/sim/sim_smoke_v21`.
-- Episode count per size (20/25/30/40) within each spot: roughly balanced; no size undersampled and no
+- Episode count per size (25/30/40) within each spot: roughly balanced; no size undersampled and no
   whole size missing from a spot.
 - 5 random episodes watched at 2× speed: cube visibly in a grid-spot position, pad in place, and the
   grasp closes correctly for that episode's cube size.
