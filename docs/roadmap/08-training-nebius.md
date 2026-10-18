@@ -36,14 +36,15 @@ retraining needed (`TE=0.01 ./scripts/rollout.sh`). Compare it in eval (09).
 ## Nebius evidence (collect it as you go)
 
 Keep `nebius/usage.md` in the submission, appended during the day:
-- `nebius compute instance list` output (VM ids, platform `gpu-h100…`/`gpu-rtx6000`, preset) at creation
+- `nebius compute instance list` output (VM id, platform `gpu-rtx6000-a`, preset `1gpu-24vcpu-218gb`) at creation
 - `nvidia-smi` snapshot during training
 - `logs/train_*.log` and the loss curves (W&B screenshots if `WANDB=true`, else the log)
 - wall-clock per stage (sim collection, Cosmos per segment, training steps/s)
-- Object Storage listing of datasets and checkpoints (`aws s3 ls --endpoint-url https://storage.<region>.nebius.cloud …`)
+- Object Storage listing of datasets and checkpoints (`python scripts/nebius_s3.py ls s3://<bucket>/<team>/`)
 
 Preemptible VMs are cheaper but can stop; for the main run use a non-preemptible VM or sync checkpoints to
-Object Storage every save (`aws s3 sync outputs/ s3://…/outputs`).
+Object Storage every save (`python scripts/nebius_s3.py put outputs/act_main s3://…/outputs/act_main`, or
+`aws s3 sync`; credentials in 11).
 
 ## Acceptance check
 

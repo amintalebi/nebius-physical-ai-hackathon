@@ -19,6 +19,32 @@ nebius/                      usage.md, instance list, nvidia-smi, training logs,
 ensemble/                    README.md (design) + its eval rows
 ```
 
+## Credentials (T+0:00-0:30, owner T)
+
+The event already made the keys: SecretStash entry **`hackathon-object-storage`** in our project holds
+`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION=uk-south2`,
+`AWS_ENDPOINT_URL=https://storage.uk-south2.nebius.cloud` and `ACCESS_KEY_EXPIRES_AT`
+([participant guide](https://github.com/dariolaportanebius/nebius-starter-skill) §6). Don't create service accounts or keys.
+
+1. **Bucket (once per team):** console → Storage → Object Storage → Create bucket. Name unique in the region
+   (e.g. `s2t-group02-<suffix>`), class **Standard** with **Force storage class**, size **200 GiB**, versioning off.
+   We get exactly one bucket, so check whether a teammate made it first.
+2. **Keys on each box that uploads (the VM and the laptop):** console → SecretStash → `hackathon-object-storage` →
+   primary version. Enter them at the prompts of `aws configure --profile nebius` (region `uk-south2`), never in a
+   command line, chat, git or the bucket. Check `ACCESS_KEY_EXPIRES_AT` is after the cutoff.
+3. **Prove write access now, not at T+8:30:**
+
+```bash
+AWS_PROFILE=nebius uv run --with boto3 python scripts/nebius_s3.py check s3://<bucket>/<team>/   # writes, reads back, deletes 1 byte
+```
+
+During the day, `nebius_s3.py put` mirrors a folder and skips files already uploaded (same key and size). Run it
+after each checkpoint save, so outputs survive the VM:
+`python scripts/nebius_s3.py put outputs/act_main s3://<bucket>/<team>/outputs/act_main`.
+Both this script and `sync_to_nebius.sh` default to `uk-south2` and `https://storage.uk-south2.nebius.cloud`.
+
+## Upload
+
 Build it locally under `submission/` (git-ignored), then:
 
 ```bash
@@ -51,4 +77,4 @@ Sim-to-real alignment:     joint-unit conversion verified by open-loop replay (a
 
 ## If it fails
 
-Credentials or endpoint wrong → test at T+0:30 by uploading a 1-byte file, not at T+8:30.
+Credentials or endpoint wrong → `nebius_s3.py check` at T+0:30 (Credentials above), not at T+8:30.

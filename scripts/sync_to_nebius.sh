@@ -1,12 +1,12 @@
 #!/bin/bash
 # Push the submission folder to Nebius Object Storage, then list it back. "Your folder lands there by
 # the cutoff or it doesn't exist" (brief), so the list-back is the proof, not the upload exit code.
-#   BUCKET=s3://<bucket>/<team> REGION=eu-north1 ./scripts/sync_to_nebius.sh
-# Credentials: Object Storage access key from the Nebius console in ~/.aws/credentials (profile nebius).
+#   BUCKET=s3://<bucket>/<team> REGION=uk-south2 ./scripts/sync_to_nebius.sh
+# Credentials: SecretStash `hackathon-object-storage` keys in ~/.aws/credentials (profile nebius), docs/roadmap/11.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 BUCKET="${BUCKET:?s3://bucket/team-folder}"
-REGION="${REGION:-eu-north1}"
+REGION="${REGION:-uk-south2}"
 EP="https://storage.${REGION}.nebius.cloud"
 AWS=(aws --profile "${AWS_PROFILE:-nebius}" --endpoint-url "$EP")
 

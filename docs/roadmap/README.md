@@ -20,5 +20,5 @@ by our own impression), and **If it fails**.
 | 11 | [submission](11-submission.md) | Object Storage layout and the cutoff checklist |
 | — | [open-questions](open-questions.md) | Rules to confirm with organizers, first thing |
 
-Background: [`../sources.md`](../sources.md) lists every upstream repo we read and the seven findings
+Background: [`../sources.md`](../sources.md) lists every upstream repo we read and the eight findings
 that changed this plan. The most important one is **finding 1**: sim and real joint units differ.

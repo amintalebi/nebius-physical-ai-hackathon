@@ -9,6 +9,7 @@ dependencies = ["numpy", "pyarrow", "pyyaml", "opencv-python-headless"]
 
 [project.optional-dependencies]
 cosmos = ["openai"]
+nebius = ["boto3"]
 metrics = ["torch", "transformers"]
 dev = ["pytest"]
 
