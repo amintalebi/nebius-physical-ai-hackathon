@@ -2,6 +2,8 @@
 
 ## Highlights
 
+**▶ Video:** [https://drive.google.com/file/d/1CR6DgpyHQQngK3mWgzbhxxhQz2_zHT_I/view?usp=sharing](https://drive.google.com/file/d/1CR6DgpyHQQngK3mWgzbhxxhQz2_zHT_I/view?usp=sharing)
+
 - **What:** an SO-101 arm picks up a blue cube and places it on a target square. One ACT policy, trained on
   **Isaac Sim demos + NVIDIA Cosmos re-renders + real teleop demos**, entirely on **Nebius AI Cloud**.
 - **Result:** our submitted model **v06 picks and places the cube on the real robot** (it retries after a miss;
