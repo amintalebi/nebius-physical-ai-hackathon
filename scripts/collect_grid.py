@@ -5,7 +5,7 @@ Runs the starter's ./collect.sh once per spot (and per cube size) with the s2t_s
 set, appending to one dataset (--resume). Equal episodes per (spot, size) = the training data covers the
 judges' test set and the 30|40 mm event cube sizes.
 
-    python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 12 \
+    python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 8 \
         --dataset-name sim_A
     python scripts/collect_grid.py --starter ... --per-spot 4 --sizes 40 --dataset-name sim_A_40   # one size
 
