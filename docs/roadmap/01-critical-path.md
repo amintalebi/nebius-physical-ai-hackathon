@@ -17,7 +17,7 @@ The event gives each team **one** GPU in project `group02-project`, region **`uk
 `ssh ubuntu@<ip>` with the key in its cloud-init. Get the IP with
 `nebius --profile hackathon compute instance get-by-name --parent-id <project> --name s2t-rtx6000`.
 Team limits: 3 VMs, 20 non-GPU vCPUs, 4 disks / 500 GiB (100 GiB left), **1 public IP (used by this VM)**,
-1 bucket of 200 GiB. A teammate who needs a second box gets a CPU VM or a CPU DevLab, never a second GPU.
+1 bucket of 200 GiB (ours: `s2t-group02-a66c17`, enhanced_throughput class; see 11). A teammate who needs a second box gets a CPU VM or a CPU DevLab, never a second GPU.
 
 ### Sharing the GPU (96 GB)
 

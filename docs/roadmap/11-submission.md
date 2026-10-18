@@ -26,16 +26,17 @@ The event already made the keys: SecretStash entry **`hackathon-object-storage`*
 `AWS_ENDPOINT_URL=https://storage.uk-south2.nebius.cloud` and `ACCESS_KEY_EXPIRES_AT`
 ([participant guide](https://github.com/dariolaportanebius/nebius-starter-skill) §6). Don't create service accounts or keys.
 
-1. **Bucket (once per team):** console → Storage → Object Storage → Create bucket. Name unique in the region
-   (e.g. `s2t-group02-<suffix>`), class **Standard** with **Force storage class**, size **200 GiB**, versioning off.
-   We get exactly one bucket, so check whether a teammate made it first.
-2. **Keys on each box that uploads (the VM and the laptop):** console → SecretStash → `hackathon-object-storage` →
-   primary version. Enter them at the prompts of `aws configure --profile nebius` (region `uk-south2`), never in a
-   command line, chat, git or the bucket. Check `ACCESS_KEY_EXPIRES_AT` is after the cutoff.
+1. **Bucket: done, `s2t-group02-a66c17`.** Class **enhanced_throughput** (forced), 200 GiB, versioning off.
+   The guide says Standard, but our project's quota is `storage.bucket.size.enhanced-throughput` = 200 GiB and
+   Standard = 0, so Standard writes fail with `QuotaLimitExceeded`. We get exactly one bucket; don't create another.
+2. **Keys on each box that uploads: done on the VM and on one laptop** as profile `nebius` (`~/.aws`, mode 600;
+   key expires 2026-11-11). Another box: console → SecretStash → `hackathon-object-storage` → primary version, and
+   enter them at the prompts of `aws configure --profile nebius` (region `uk-south2`), never in a command line,
+   chat, git or the bucket.
 3. **Prove write access now, not at T+8:30:**
 
 ```bash
-AWS_PROFILE=nebius uv run --with boto3 python scripts/nebius_s3.py check s3://<bucket>/<team>/   # writes, reads back, deletes 1 byte
+AWS_PROFILE=nebius uv run --with boto3 python scripts/nebius_s3.py check s3://s2t-group02-a66c17/<team>/   # writes, reads back, deletes 1 byte
 ```
 
 During the day, `nebius_s3.py put` mirrors a folder and skips files already uploaded (same key and size). Run it
