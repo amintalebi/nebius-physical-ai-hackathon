@@ -20,6 +20,7 @@ lerobot-record \
   --robot.calibration_dir="$ROBOT_CALIB_DIR" --robot.use_degrees="$ROBOT_USE_DEGREES" \
   --robot.cameras="$CAMERAS" \
   --teleop.type="$TELEOP_TYPE" --teleop.port="$TELEOP_PORT" --teleop.id="$TELEOP_ID" \
+  --teleop.calibration_dir="$ROBOT_CALIB_DIR" --teleop.use_degrees="$TELEOP_USE_DEGREES" \
   --dataset.repo_id=local/station --dataset.root="$ROOT" --dataset.push_to_hub=false \
   --dataset.single_task="$TASK" --dataset.num_episodes="$NUM" \
   --dataset.episode_time_s=30 --dataset.reset_time_s=15 \
