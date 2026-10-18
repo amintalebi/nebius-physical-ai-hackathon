@@ -3,15 +3,17 @@
 
 Runs the starter's ./collect.sh once per spot (and per cube size) with the s2t_station.patch env vars
 set, appending to one dataset (--resume). Equal episodes per (spot, size) = the training data covers the
-judges' test set and the 25|30|40 mm cube sizes.
+judges' test set and the 20|30|40 mm cube sizes.
 
     python scripts/collect_grid.py --starter ~/work/so101_sim_pickplace --per-spot 12 \
         --dataset-name sim_A
-    python scripts/collect_grid.py --starter ... --per-spot 4 --sizes 25 30 40 --dataset-name sim_A
+    python scripts/collect_grid.py --starter ... --per-spot 4 --sizes 20 30 40 --dataset-name sim_A
 
 Cube sizes default to `geometry.cube_sizes_mm` in configs/station.yaml (fallback: a single
 `cube_size_m`). The starter's grasp offset scales with CUBE_SIZE (`GRASP_POINT_OFFSET` includes
-`+ CUBE_SIZE/2`), but validate expert success at 25/40 before bulk (roadmap 03).
+`+ CUBE_SIZE/2`), but validate expert success at 20/40 before bulk (roadmap 03). NOTE: the starter
+ships cube assets for 25/30/40 only — a 20 mm twin does not exist and must be added or the 20 mm
+size confirmed with the organizers.
 
 Run on the Isaac Sim VM (L40S / RTX PRO 6000; not H100, Isaac Sim needs RT cores).
 """
