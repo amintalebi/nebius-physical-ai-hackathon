@@ -23,7 +23,7 @@ lerobot-record \
   --teleop.calibration_dir="$ROBOT_CALIB_DIR" --teleop.use_degrees="$TELEOP_USE_DEGREES" \
   --dataset.repo_id=local/station --dataset.root="$ROOT" --dataset.push_to_hub=false \
   --dataset.single_task="$TASK" --dataset.num_episodes="$NUM" \
-  --dataset.episode_time_s=30 --dataset.reset_time_s=15 \
+  --dataset.episode_time_s="${EP_TIME:-45}" --dataset.reset_time_s="${RESET_TIME:-15}" \
   --resume="$RESUME" --display_data=true
 
 after=$(python3 -c "import json;print(json.load(open('$ROOT/meta/info.json'))['total_episodes'])")
