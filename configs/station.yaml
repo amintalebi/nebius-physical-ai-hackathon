@@ -17,7 +17,7 @@ teleop:
 
 camera:
   key: front                            # MUST equal the sim camera key kept in the dataset
-  index_or_path: 0                      # MEASURE: lerobot-find-cameras opencv
+  index_or_path: 1                      # lerobot-find-cameras opencv, 2026-10-18 (front)
   width: 640
   height: 480
   fps: 30
@@ -25,8 +25,8 @@ camera:
 # Real cameras recorded at the station (organizers: front + side, no wrist camera). The policy we train on sim
 # data uses `camera.key` (front) only; side is recorded for real-only training. Indices: lerobot-find-cameras.
 cameras:
-  front: {index_or_path: 0, width: 640, height: 480, fps: 30}   # MEASURE: the C270
-  side:  {index_or_path: 1, width: 640, height: 480, fps: 30}   # MEASURE
+  front: {index_or_path: 1, width: 640, height: 480, fps: 30}   # faces the robot head-on (native 1280x720)
+  side:  {index_or_path: 0, width: 640, height: 480, fps: 30}   # from the robot's side (native 1280x960)
 
 task: "pick up the cube and place it on the green pad"   # same string in sim, real and rollout
 
