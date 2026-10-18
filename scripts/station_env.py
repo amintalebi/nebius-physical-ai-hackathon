@@ -13,8 +13,8 @@ REPO = Path(__file__).resolve().parents[1]
 st = yaml.safe_load((REPO / "configs/station.yaml").read_text())
 r, t, c = st["robot"], st["teleop"], st["camera"]
 cam_cfgs = st.get("cameras") or {c["key"]: c}
-cams = "{" + ", ".join("%s: {type: opencv, index_or_path: %s, width: %d, height: %d, fps: %d}" % (
-    k, v["index_or_path"], v["width"], v["height"], v["fps"]) for k, v in cam_cfgs.items()) + "}"
+cams = "{" + ", ".join("%s: {type: opencv, index_or_path: %s, width: %d, height: %d, fps: %d, warmup_s: %d}" % (
+    k, v["index_or_path"], v["width"], v["height"], v["fps"], v.get("warmup_s", 3)) for k, v in cam_cfgs.items()) + "}"
 calib_dir = (REPO / r["calibration_file"]).parent
 env = {
     "ROBOT_TYPE": r["type"], "ROBOT_PORT": r["port"], "ROBOT_ID": r["id"],
