@@ -84,9 +84,13 @@ def cmd_prepare(a):
     prompts = [p.strip() for p in (REPO / "configs/cosmos/station_prompts.txt").read_text().split("\n---\n") if p.strip()]
     if a.variants > len(prompts):
         sys.exit(f"--variants {a.variants} but only {len(prompts)} prompts in configs/cosmos/station_prompts.txt")
-    style = Path(a.style_image).resolve()
-    if not style.exists():
-        sys.exit(f"style image {style} missing: grab a frame from the station camera first (docs/roadmap/04)")
+    style = None
+    if a.style_image:  # optional: without it Cosmos picks a random frame of the input segment (prompt-only look)
+        style = Path(a.style_image).resolve()
+        if not style.exists():
+            sys.exit(f"style image {style} missing: grab a frame from the station camera first (docs/roadmap/04)")
+    else:
+        print("[warn] no --style-image: prompt-only transfer (Cosmos uses a frame of the sim input as image context)")
     vids = episode_videos(a.dataset, cam)
     lens = episode_lengths(a.dataset)
     eps = sorted(vids)[: a.limit] if a.limit else sorted(vids)
@@ -103,16 +107,20 @@ def cmd_prepare(a):
             seg_path = work / "segments" / f"ep{ep:06d}_s{s0:04d}.mp4"
             write_frames(seg_path, seg, a.fps_in)
             for v in range(a.variants):
-                specs.append({
+                spec = {
                     "name": f"ep{ep:06d}_v{v}_s{s0:04d}",
                     "prompt": prompts[v],
                     "video_path": str(seg_path),
-                    "image_context_path": str(style),
                     "guidance": a.guidance,
                     "seed": 1000 + ep * 10 + v,  # same seed for all segments of one episode-variant
                     "num_steps": a.num_steps,
                     "edge": {"control_weight": a.edge_weight, "preset_edge_threshold": a.edge_threshold},
-                })
+                }
+                if style is not None:
+                    spec["image_context_path"] = str(style)
+                if a.resolution:
+                    spec["resolution"] = a.resolution
+                specs.append(spec)
     (work / "shards").mkdir(parents=True, exist_ok=True)
     for g in range(a.gpus):
         with open(work / "shards" / f"shard_{g}.jsonl", "w") as f:
@@ -133,10 +141,16 @@ def cmd_run(a):
         if not shard.read_text().strip():
             continue
         out = work / "out"
-        # TODO(verify): flag spelling for guardrails on the VM: `python examples/inference.py --help`
         cmd = [a.python, "examples/inference.py", "-i", str(shard), "-o", str(out), f"--model={job['model']}"]
-        cmd += a.extra
+        if not a.guardrails:  # guardrails need meta-llama/Llama-Guard-3-8B (gated, our token can't access it)
+            cmd.append("--disable-guardrails")
+        cmd += [x for x in a.extra if x != "--"]  # argparse keeps the "--" separator in REMAINDER
         env = dict(os.environ, CUDA_VISIBLE_DEVICES=str(g))
+        # Cosmos downloads weights via `uvx hf download`; uvx lives in the Cosmos venv, not on a bare PATH
+        venv_bin = (Path(a.cosmos_repo) / a.python).parent.resolve()
+        env["PATH"] = f"{venv_bin}{os.pathsep}{env.get('PATH', '')}"
+        if job["model"].endswith("/distilled"):  # edge/distilled is only registered with this flag (config.py)
+            env["COSMOS_EXPERIMENTAL_CHECKPOINTS"] = "1"
         log = open(work / f"run_gpu{g}.log", "w")
         print("GPU", g, ":", " ".join(cmd))
         procs.append(subprocess.Popen(cmd, cwd=a.cosmos_repo, env=env, stdout=log, stderr=subprocess.STDOUT))
@@ -157,6 +171,10 @@ def cmd_assemble(a):
         # copy meta + data; videos come from Cosmos
         shutil.copytree(a.dataset / "meta", dst / "meta")
         shutil.copytree(a.dataset / "data", dst / "data")
+        # other cameras (e.g. wrist) are not transferred: keep their raw sim videos so the dataset stays loadable
+        for d in (a.dataset / "videos").glob("chunk-*/observation.images.*"):
+            if d.name != f"observation.images.{cam}":
+                shutil.copytree(d, dst / d.relative_to(a.dataset))
         kept = []
         for ep in job["episodes"]:
             n = job["lengths"][str(ep)]
@@ -216,7 +234,9 @@ sub = ap.add_subparsers(dest="cmd", required=True)
 p = sub.add_parser("prepare")
 p.add_argument("--dataset", type=Path, required=True)
 p.add_argument("--work", type=Path, required=True)
-p.add_argument("--style-image", required=True, help="a real frame from the station camera (image_context_path)")
+p.add_argument("--style-image", default=None,
+               help="a real frame from the station camera (image_context_path); omit for prompt-only transfer")
+p.add_argument("--resolution", default=None, help='Cosmos generation resolution, e.g. "480" (default: model default 720)')
 p.add_argument("--gpus", type=int, default=1)
 p.add_argument("--variants", type=int, default=1, help="appearance variants per episode (each counts toward 300)")
 p.add_argument("--limit", type=int, default=0, help="only the first N episodes (smoke test)")
@@ -231,6 +251,7 @@ p = sub.add_parser("run")
 p.add_argument("--work", type=Path, required=True)
 p.add_argument("--cosmos-repo", type=Path, required=True)
 p.add_argument("--python", default=".venv/bin/python", help="Cosmos venv python, relative to --cosmos-repo")
+p.add_argument("--guardrails", action="store_true", help="keep Cosmos guardrails on (default: --disable-guardrails)")
 p.add_argument("extra", nargs=argparse.REMAINDER, help="extra args passed to examples/inference.py")
 p.set_defaults(fn=cmd_run)
 p = sub.add_parser("assemble")
