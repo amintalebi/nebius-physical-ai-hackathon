@@ -19,6 +19,8 @@ differently on the day, check whether its version moved before changing the plan
    calibrated degrees. Unconverted sim actions would send the real arm to wrong poses, and mixing them
    with real data teaches contradictory targets for the same image. Fix: `s2t/units.py` +
    `scripts/convert_sim_dataset.py`, verified on hardware by the open-loop replay test (roadmap 02).
+   **Update:** the starter's units are LeRobot's `use_degrees=False` convention by design, so the simpler fix is to
+   run the real arm with `use_degrees=false` (no conversion); the replay test still decides (roadmap 01, sim-first).
 2. **Camera mismatch.** Sim has `front`+`wrist`; the station has one fixed camera. `merge` requires
    identical features. Fix: keep only `front`, named exactly like the station camera key.
 3. **Format mismatch.** Starter writes v2.1, LeRobot reads/merges v3.0. Fix: LeRobot's converter.

@@ -60,7 +60,15 @@ team's Token Factory credits. Only a Cosmos model counts for the Cosmos Reason r
 
 ## Commands
 
+**Endpoint in use (verified 2026-10-18):** Token Factory dedicated `dedicated/nvidia/Cosmos3-Super-Reasoner-4KvIHP`,
+base URL `https://api.tokenfactory.nebius.com/v1/`. On the VM the key, URL and model are in
+`~/.config/s2t/reason.env` (mode 600; never commit it). 3 smoke sim episodes: all parsed, all
+`task_success=true`, motion 5, **~7 s per episode** with `--inline` (≈ 35 min for 300 episodes).
+
 ```bash
+set -a; . ~/.config/s2t/reason.env; set +a      # REASON_API_KEY, REASON_BASE_URL, REASON_MODEL
+python scripts/cosmos_reason_score.py score --name sim_raw_A --dataset ~/work/datasets/local/sim_A \
+    --base-url "$REASON_BASE_URL" --model "$REASON_MODEL" --inline
 python scripts/cosmos_reason_score.py score --name real         --dataset data/real/station_v3
 python scripts/cosmos_reason_score.py score --name sim_raw_A    --dataset data/sim/A_real_units
 python scripts/cosmos_reason_score.py score --name sim_raw_B    --dataset data/sim/B_real_units
