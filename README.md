@@ -1,4 +1,8 @@
-# Sim to Table: NVIDIA × Nebius AI Builders Hackathon (Berlin, 18 Oct 2026) — team group02
+# Sim to Table: NVIDIA × Nebius AI Builders Hackathon (Berlin, 18 Oct 2026) — team Natural Intelligence
+
+## 🏆 We won the Physical AI track
+
+**First place on the Physical AI track**, as team **Natural Intelligence** — see the video and submission below.
 
 ## Highlights
 
